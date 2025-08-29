@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Bus Route Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles for the body and form card */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+            color: #1e293b; /* slate-900 */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Dark mode styles for the main body and text */
+        html.dark body {
+            background-color: #0c121e; /* A very dark, almost black, background */
+            color: #f1f5f9; /* Light text for contrast */
+        }
+
+        /* The form card now has a consistent dark background regardless of theme */
+        .form-card {
+            background-color: #1e293b; /* Consistent deep slate color */
+            transition: all 0.3s ease;
+        }
+
+        /* Input field styling for consistency */
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #475569; /* slate-600 */
+            background-color: #475569; /* slate-600 */
+            color: #e2e8f0; /* Light text */
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #64748b; /* slate-500 */
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.5);
+        }
+
+        /* Styling for the Django form fields */
+        #id_username, #id_email, #id_first_name, #id_last_name, #id_preferred_language, #id_password1, #id_password2 {
+            @apply form-input;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8">
+    <div class="container mx-auto px-4 w-full max-w-md">
+        <!-- The main form card with its consistent dark color -->
+        <div class="form-card rounded-xl shadow-md p-6 mb-8 relative">
+
+            <div class="flex items-center justify-between mb-6">
+                <!-- Text colors inside the form are now consistent for better contrast -->
+                <a href="{% url 'home' %}" class="text-gray-300 hover:text-gray-100 transition-colors duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </a>
+                <h1 class="text-2xl font-bold text-center text-gray-100">Register</h1>
+                <div></div> <!-- Placeholder for symmetry -->
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="{% if message.tags == 'error' %}bg-red-900 border-red-700 text-red-200{% else %}bg-green-900 border-green-700 text-green-200{% endif %} px-4 py-3 rounded-lg relative mb-6" role="alert">
+                        <span class="block sm:inline">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <!-- Consistent label text color -->
+                    <label for="id_username" class="block text-gray-300 text-sm font-medium mb-2">Username</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <!-- Consistent label text color -->
+                    <label for="id_email" class="block text-gray-300 text-sm font-medium mb-2">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <!-- Consistent label text color -->
+                        <label for="id_first_name" class="block text-gray-300 text-sm font-medium mb-2">First Name</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="text-red-400 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <!-- Consistent label text color -->
+                        <label for="id_last_name" class="block text-gray-300 text-sm font-medium mb-2">Last Name</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="text-red-400 text-xs mt-1">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Phone number field has been removed as requested -->
+                <div>
+                    <!-- Consistent label text color -->
+                    <label for="id_preferred_language" class="block text-gray-300 text-sm font-medium mb-2">Preferred Language</label>
+                    {{ form.preferred_language }}
+                    {% if form.preferred_language.errors %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.preferred_language.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <!-- Consistent label text color -->
+                    <label for="id_password1" class="block text-gray-300 text-sm font-medium mb-2">Password</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-gray-400 text-xs mt-1">Your password must contain at least 8 characters and can't be entirely numeric.</p>
+                </div>
+                <div>
+                    <!-- Consistent label text color -->
+                    <label for="id_password2" class="block text-gray-300 text-sm font-medium mb-2">Confirm Password</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg
+                               hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                               transition-all duration-300 transform hover:scale-105 shadow-lg mt-4">
+                    Register
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <!-- Consistent text color for the link -->
+                <p class="text-gray-300">Already have an account? <a href="{% url 'login' %}" class="text-blue-400 hover:text-blue-300 font-medium">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to automatically apply the dark theme from localStorage on page load -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const html = document.documentElement;
+            const currentTheme = localStorage.getItem('theme');
+
+            if (currentTheme) {
+                if (currentTheme === 'dark') {
+                    html.classList.add('dark');
+                } else {
+                    html.classList.remove('dark');
+                }
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                html.classList.add('dark');
+            }
+        });
+    </script>
+</body>
+</html>

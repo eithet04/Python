@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YBS Route Finder - Search Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .route-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .route-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        .bus-icon {
+            background-color: #6C63FF; /* A vibrant purple for bus icon */
+            color: white;
+            border-radius: 10px;
+            padding: 6px 10px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(108, 99, 255, 0.3);
+        }
+        .arrow-icon {
+            color: #6C63FF;
+        }
+        .shortest-path-label {
+            background-color: #4CAF50; /* Green for shortest path */
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+        }
+        .transfer-indicator {
+            font-weight: bold;
+            color: #333;
+        }
+        /* Styles for the full line stops list, similar to screenshot */
+        .full-line-stop-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px;
+            border-left: 3px solid #6C63FF;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.2s ease;
+        }
+        .full-line-stop-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(5px);
+        }
+        .full-line-stop-icon {
+            background-color: #6C63FF; /* Bus icon color */
+            color: white;
+            border-radius: 10px;
+            padding: 6px 10px;
+            font-weight: bold;
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.25rem; /* leading-5 */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px; /* Adjust as needed */
+            text-align: center;
+            margin-right: 12px;
+            box-shadow: 0 4px 6px rgba(108, 99, 255, 0.3);
+        }
+        .full-line-stop-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .full-line-stop-name {
+            font-weight: 500; /* font-medium */
+            color: #374151; /* gray-700 */
+        }
+        .full-line-stop-info {
+            font-size: 0.875rem; /* text-sm */
+            color: #6B7280; /* gray-500 */
+        }
+        .info-control {
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        /* Style for the single stop marker map */
+        .single-stop-map-container {
+            position: relative;
+            height: 300px; /* Adjust height as needed */
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: 1rem;
+        }
+        /* Enhanced map container for better visibility */
+        .map-container {
+            height: 500px; /* Increased map height for better visibility */
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            margin-top: 1.5rem;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-8">
+    <div class="container mx-auto px-4 w-full max-w-5xl">
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <a href="javascript:history.back()" class="text-gray-600 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </a>
+                <h1 class="text-2xl font-bold text-gray-800">Route Result</h1>
+                <div></div> </div>
+            {% if search_type == 'bus_stop' %}
+                <div class="flex items-center justify-center text-lg font-semibold text-gray-700 mb-4">
+                    <span>{{ start_stop_name }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-2 arrow-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                    <span>{{ end_stop_name }}</span>
+                </div>
+            {% elif search_type == 'bus_line' or search_type == 'detailed_bus_line' %}
+                <div class="flex items-center justify-center text-lg font-semibold text-gray-700 mb-4">
+                    <span>Bus Line: {{ bus_line_number }} details</span>
+                </div>
+            {% elif search_type == 'buses_by_stop' %}
+                <div class="flex items-center justify-center text-lg font-semibold text-gray-700 mb-4">
+                    <span>Buses serving: {{ single_bus_stop_name }}</span>
+                </div>
+            {% endif %}
+        </div>
+        {% if error_message %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
+                <strong class="font-bold">Error!</strong>
+                <span class="block sm:inline">{{ error_message }}</span>
+            </div>
+        {% endif %}
+        {% if results %}
+            {% if search_type == 'bus_stop' %}
+                {% if search_count is not None %}
+                    <div class="bg-indigo-100 text-indigo-700 px-4 py-3 rounded-lg relative mb-6 text-center" role="alert">
+                        <p class="font-bold"> {{ search_count }} user found this route.</p>
+                    </div>
+                {% endif %}
+                <div class="bg-white rounded-xl shadow-md p-6 mb-4">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Available Routes</h2>
+                    {% if results.0.route_type == 'available_bus_line' %}
+                        <p class="text-gray-600 mb-4">Click on a bus line to see its segment details for this journey:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for route in results %}
+                                <div class="route-card p-4 flex flex-col justify-between hover:bg-gray-50 cursor-pointer">
+                                    <a href="{% url 'search_route' %}?search_type=detailed_bus_line&bus_line_number={{ route.bus_line_number }}&start_stop_id={{ route.start_stop_id }}&end_stop_id={{ route.end_stop_id }}" class="flex-grow flex items-center justify-between mb-2">
+                                        <div class="bus-icon text-base">Bus {{ route.bus_line_number }}</div>
+                                        <span class="text-gray-700 font-semibold text-lg text-right ml-2">
+                                            {{ route.start_stop_name }} &rarr; {{ route.end_stop_name }}
+                                        </span>
+                                    </a>
+                                    {% if user.is_authenticated %}
+                                        <a href="{% url 'save_route' %}?start_stop_id={{ route.start_stop_id }}&end_stop_id={{ route.end_stop_id }}&bus_line_number={{ route.bus_line_number }}"
+                                           class="mt-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 text-sm flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                                            </svg>
+                                            Save Route
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% elif results.0.route_type == 'transfer' %}
+                        {% for result in results %}
+                            <div class="route-card p-6 col-span-2">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="text-gray-600 text-sm font-medium">
+                                        Total: {{ result.total_distance_km }} km / {{ result.total_time_minutes }} minutes
+                                    </div>
+                                </div>
+                                <div class="transfer-indicator mb-2">
+                                    <span class="shortest-path-label">
+                                        {% if result.num_transfers == 0 %}
+                                            Direct Route
+                                        {% elif result.num_transfers == 1 %}
+                                            Two-Step Route (1 Transfer)
+                                        {% else %}
+                                            Multi-Step Route ({{ result.num_transfers }} Transfers)
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% for segment in result.transfer_details %}
+                                    <div class="mb-4 last:mb-0">
+                                        <div class="flex items-center mb-1">
+                                            <span class="bus-icon text-sm mr-2">Bus {{ segment.bus_line_number }}</span>
+                                            <span class="text-gray-700 text-base">
+                                                Take Bus {{ segment.bus_line_number }} from <strong>{{ segment.start_stop }}</strong> to <strong>{{ segment.end_stop }}</strong>.
+                                            </span>
+                                        </div>
+                                        <div class="ml-10 text-gray-500 text-sm">
+                                            ({{ segment.distance_km }} km, {{ segment.time_minutes }} mins)
+                                        </div>
+                                        <div class="mt-2 ml-4">
+                                            <h4 class="font-medium text-gray-600 text-sm mb-1">Stops on this segment:</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <ul class="list-disc list-inside text-gray-600 text-xs">
+                                                    {% for stop in segment.stops_on_this_segment %}
+                                                        <li>{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                                <div id="map-segment-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" class="h-48 rounded-lg shadow-md"></div>
+                                            </div>
+                                        </div>
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                const mapElement = document.getElementById('map-segment-{{ forloop.parentloop.counter }}-{{ forloop.counter }}');
+                                                if (!mapElement) return;
+                                                const map = L.map(mapElement).setView([16.8661, 96.1951], 13);
+                                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                }).addTo(map);
+                                                const startIcon = new L.Icon({
+                                                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                                                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                                    iconSize: [25, 41],
+                                                    iconAnchor: [12, 41],
+                                                    popupAnchor: [1, -34],
+                                                    shadowSize: [41, 41]
+                                                });
+                                                const endIcon = new L.Icon({
+                                                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                                                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                                    iconSize: [25, 41],
+                                                    iconAnchor: [12, 41],
+                                                    popupAnchor: [1, -34],
+                                                    shadowSize: [41, 41]
+                                                });
+                                                const defaultIcon = new L.Icon({
+                                                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                                                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                                    iconSize: [25, 41],
+                                                    iconAnchor: [12, 41],
+                                                    popupAnchor: [1, -34],
+                                                    shadowSize: [41, 41]
+                                                });
+                                                const stops = [
+                                                    {% for stop in segment.stops_on_this_segment %}
+                                                        {% if stop.latitude is not None and stop.longitude is not None %}
+                                                            {lat: {{ stop.latitude }}, lng: {{ stop.longitude }}, name: "{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}", order: {{ stop.order|default:forloop.counter }}},
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                ];
+                                                stops.sort((a, b) => (a.order || 0) - (b.order || 0));
+                                                const routePoints = stops.map(stop => [stop.lat, stop.lng]);
+                                                L.polyline(routePoints, {color: '#6C63FF', weight: 4}).addTo(map);
+                                                const bounds = L.latLngBounds();
+                                                stops.forEach((stop, index) => {
+                                                    let icon = defaultIcon;
+                                                    if (index === 0) {
+                                                        icon = startIcon;
+                                                    } else if (index === stops.length - 1) {
+                                                        icon = endIcon;
+                                                    }
+                                                    const marker = L.marker([stop.lat, stop.lng], {icon: icon})
+                                                        .addTo(map)
+                                                        .bindPopup(`
+                                                            <div class="popup-content">
+                                                                <strong class="text-lg">${stop.name}</strong><br>
+                                                                <span class="text-sm text-gray-500">Stop Order: ${stop.order || 'N/A'}</span>
+                                                            </div>
+                                                        `);
+                                                    bounds.extend([stop.lat, stop.lng]);
+                                                });
+                                                if (stops.length > 0) {
+                                                    map.fitBounds(bounds, {padding: [30, 30]});
+                                                } else {
+                                                    map.setView([16.8661, 96.1951], 13);
+                                                }
+                                            });
+                                        </script>
+                                    </div>
+                                    {% if not forloop.last %}
+                                        <div class="flex items-center justify-center py-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                            </svg>
+                                            <span class="text-gray-500 text-sm ml-2">Transfer</span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for result in results %}
+                        <div class="route-card p-6 {% if result.route_type == 'full_line' or result.route_type == 'segment_line' or result.route_type == 'single_stop_buses_list' %}col-span-2{% else %}col-span-1 md:col-span-2{% endif %}">
+                            {% if result.route_type == 'full_line' or result.route_type == 'segment_line' %}
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="text-gray-600 text-sm font-medium">
+                                        {{ result.stops_count }} stops / {{ result.total_distance_km }} km
+                                    </div>
+                                    <div class="text-gray-600 text-sm font-medium">
+                                        {{ result.total_time_minutes }} minutes
+                                    </div>
+                                </div>
+                                <h3 class="font-semibold text-gray-700 text-lg mb-4">
+                                    {% if result.route_type == 'segment_line' %}
+                                        Bus Line {{ result.bus_line_number }} (from {{ result.start_stop_name }} to {{ result.end_stop_name }}):
+                                    {% else %}
+                                        All stops on Bus Line {{ result.bus_line_number }}:
+                                    {% endif %}
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="space-y-3">
+                                    {% for stop in result.route_stops %}
+                                        <div class="full-line-stop-item">
+                                            <div class="full-line-stop-icon">
+                                                {{ result.bus_line_number }}
+                                            </div>
+                                            <div class="full-line-stop-details">
+                                                <div class="full-line-stop-name">{{ stop.name_mm }} ({{ stop.name_en }})</div>
+                                                <div class="full-line-stop-info">Stop Order: {{ stop.order }}</div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    </div>
+                                    <div id="map-line-{{ forloop.counter }}" class="map-container"></div>
+                                </div>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const mapElement = document.getElementById('map-line-{{ forloop.counter }}');
+                                        if (!mapElement) return;
+                                        const map = L.map(mapElement).setView([16.8661, 96.1951], 13);
+                                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                        }).addTo(map);
+                                        const startIcon = new L.Icon({
+                                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                            iconSize: [25, 41],
+                                            iconAnchor: [12, 41],
+                                            popupAnchor: [1, -34],
+                                            shadowSize: [41, 41]
+                                        });
+                                        const endIcon = new L.Icon({
+                                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                            iconSize: [25, 41],
+                                            iconAnchor: [12, 41],
+                                            popupAnchor: [1, -34],
+                                            shadowSize: [41, 41]
+                                        });
+                                        const defaultIcon = new L.Icon({
+                                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                            iconSize: [25, 41],
+                                            iconAnchor: [12, 41],
+                                            popupAnchor: [1, -34],
+                                            shadowSize: [41, 41]
+                                        });
+                                        const stops = [];
+                                            {% for stop in result.route_stops %}
+                                                {% if stop.latitude is not None and stop.longitude is not None %}
+                                                    stops.push({lat: {{ stop.latitude }}, lng: {{ stop.longitude }}, name: "{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}", order: {{ stop.order }}});
+                                                {% endif %}
+                                            {% endfor %}
+                                        stops.sort((a, b) => (a.order || 0) - (b.order || 0));
+                                        let routePoints = [];
+                                        if (stops.length > 0) {
+                                            routePoints = stops.map(stop => [stop.lat, stop.lng]);
+                                        }
+                                        L.polyline(routePoints, {color: '#6C63FF', weight: 4}).addTo(map);
+                                        const bounds = L.latLngBounds();
+                                        stops.forEach((stop, index) => {
+                                            let icon = defaultIcon;
+                                            if (index === 0) {
+                                                icon = startIcon;
+                                            } else if (index === stops.length - 1) {
+                                                icon = endIcon;
+                                            }
+                                            const marker = L.marker([stop.lat, stop.lng], {icon: icon})
+                                                .addTo(map)
+                                                .bindPopup(`
+                                                    <div class="popup-content">
+                                                        <strong class="text-lg">${stop.name}</strong><br>
+                                                        <span class="text-sm text-gray-500">Stop Order: ${stop.order}</span>
+                                                    </div>
+                                                `);
+                                            bounds.extend([stop.lat, stop.lng]);
+                                        });
+                                        if (stops.length > 0) {
+                                            map.fitBounds(bounds, {padding: [50, 50]});
+                                        } else {
+                                            map.setView([16.8661, 96.1951], 13);
+                                        }
+                                    });
+                                </script>
+                            {% elif result.route_type == 'single_stop_buses_list' %}
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="text-gray-600 text-sm font-medium">
+                                        Bus Line: {{ result.bus_line_number }}
+                                    </div>
+                                    <div class="text-gray-600 text-sm font-medium">
+                                        Serves: {{ result.searched_stop_name }}
+                                    </div>
+                                </div>
+                                <a href="{% url 'search_route' %}?search_type=detailed_bus_line&bus_line_number={{ result.bus_line_number }}"
+                                   class="route-card p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer">
+                                    <span class="bus-icon text-sm mr-2">Bus {{ result.bus_line_number }}</span>
+                                    <span class="text-gray-700 text-base">
+                                        Full Line: {{ result.full_line_start_stop_name }} to {{ result.full_line_end_stop_name }}
+                                    </span>
+                                    <span class="text-gray-500 text-sm ml-2">({{ result.stops_count }} stops, {{ result.total_distance_km }} km, {{ result.total_time_minutes }} mins)</span>
+                                </a>
+                                {% if forloop.first %}
+                                    <div id="map-single-stop" class="single-stop-map-container"></div>
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            const mapElement = document.getElementById('map-single-stop');
+                                            if (!mapElement) return;
+                                            const lat = parseFloat("{{ results.0.target_stop_latitude }}");
+                                            const lng = parseFloat("{{ results.0.target_stop_longitude }}");
+                                            if (isNaN(lat) || isNaN(lng)) return;
+                                            const map = L.map(mapElement).setView([lat, lng], 16);
+                                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                            }).addTo(map);
+                                            L.marker([lat, lng])
+                                                .addTo(map)
+                                                .bindPopup(`
+                                                    <div class="popup-content">
+                                                        <strong class="text-lg">{{ results.0.searched_stop_name }}</strong><br>
+                                                        <span class="text-sm text-gray-500">Buses serving this stop</span>
+                                                    </div>
+                                                `)
+                                                .openPopup();
+                                        });
+                                    </script>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% else %}
+            {% if not error_message %}
+                <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
+                    <strong class="font-bold">Information:</strong>
+                    <span class="block sm:inline">No results to display. Use the search form above.</span>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YBS Bus လိုင်းများ အားလုံး</title>
+    {% load static %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base Styles (Light Mode) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+            color: #1e293b; /* slate-900 */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .card {
+            background-color: white;
+            transition: all 0.3s ease;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            /* cursor: pointer; */ /* Remove cursor pointer for clickability */
+        }
+        .header {
+            background-color: white;
+        }
+        .text-main-color {
+            color: #1e293b;
+        }
+        .text-secondary-color {
+            color: #64748b;
+        }
+        .bg-secondary {
+            background-color: #e2e8f0; /* slate-200 */
+        }
+
+        /* Dark Mode Styles */
+        body.dark-theme {
+            background-color: #0f172a; /* slate-900 */
+            color: #e2e8f0; /* slate-200 */
+        }
+        body.dark-theme .card {
+            background-color: #1e293b; /* slate-800 */
+        }
+        body.dark-theme .header {
+            background-color: #1e293b;
+        }
+        body.dark-theme .text-main-color {
+            color: #e2e8f0;
+        }
+        body.dark-theme .text-secondary-color {
+            color: #94a3b8;
+        }
+        body.dark-theme .bg-secondary {
+            background-color: #334155; /* slate-700 */
+        }
+
+        /* Responsive card grid */
+        .bus-line-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Set to single column for full width */
+            gap: 1.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8">
+
+    {# -- Top Navigation Bar -- #}
+    <header class="header w-full shadow-md p-4 mb-6 flex flex-col md:flex-row justify-between items-center px-8">
+        <div class="flex items-center mb-4 md:mb-0">
+            <h1 class="text-2xl font-bold text-blue-600 dark-theme:text-blue-400">YBS Route Finder</h1>
+        </div>
+
+        {# -- Navigation Buttons -- #}
+        <nav class="flex-grow flex justify-center space-x-4 mb-4 md:mb-0">
+            {% if user.is_authenticated %}
+                <a href="{% url 'all_bus_lines' %}" class="px-6 py-3 bg-blue-200 text-blue-800 rounded-lg hover:bg-blue-300 dark-theme:bg-blue-800 dark-theme:text-blue-200 dark-theme:hover:bg-blue-700 transition-all duration-200 text-base font-medium">
+                    All Bus Lines
+                </a>
+                <a href="{% url 'rangoon_map' %}" class="px-6 py-3 bg-blue-200 text-blue-800 rounded-lg hover:bg-blue-300 dark-theme:bg-blue-800 dark-theme:text-blue-200 dark-theme:hover:bg-blue-700 transition-all duration-200 text-base font-medium">
+                    Rangoon Map
+                </a>
+                <a href="{% url 'complaint_numbers' %}" class="px-6 py-3 bg-blue-200 text-blue-800 rounded-lg hover:bg-blue-300 dark-theme:bg-blue-800 dark-theme:text-blue-200 dark-theme:hover:bg-blue-700 transition-all duration-200 text-base font-medium">
+                    Complaint Numbers
+                </a>
+
+            {% else %}
+                <span class="px-6 py-3 bg-gray-200 text-gray-400 rounded-lg dark-theme:bg-gray-700 dark-theme:text-gray-500 text-base font-medium cursor-not-allowed"
+                      title="Please log in to use this feature">
+                    All Bus Lines
+                </span>
+                <span class="px-6 py-3 bg-gray-200 text-gray-400 rounded-lg dark-theme:bg-gray-700 dark-theme:text-gray-500 text-base font-medium cursor-not-allowed"
+                      title="Please log in to use this feature">
+                    Rangoon Map
+                </span>
+                <span class="px-6 py-3 bg-gray-200 text-gray-400 rounded-lg dark-theme:bg-gray-700 dark-theme:text-gray-500 text-base font-medium cursor-not-allowed"
+                      title="Please log in to use this feature">
+                    Complaint Numbers
+                </span>
+            {% endif %}
+        </nav>
+
+        <div class="flex space-x-2 items-center">
+            <button id="theme-toggle" class="p-3 rounded-full bg-secondary text-main-color hover:bg-gray-300 dark-theme:hover:bg-slate-600 transition-all duration-200">
+                <svg class="w-6 h-6 sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1m-16 0H3m15.636 6.364l-.707.707M6.343 6.343l-.707-.707m12.728 0l-.707-.707M6.343 17.657l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg class="w-6 h-6 moon-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            {% if user.is_authenticated %}
+                <span class="text-base font-medium text-secondary-color hidden sm:block">Welcome, <span class="font-bold text-blue-600 dark-theme:text-blue-400">{{ user.username }}</span></span>
+                <a href="{% url 'logout' %}" class="px-8 py-4 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-all duration-200 text-base shadow-sm">
+                    Logout
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" class="px-8 py-4 bg-secondary text-blue-600 dark-theme:text-blue-400 rounded-lg hover:bg-gray-100 dark-theme:hover:bg-slate-600 transition-all duration-200 text-base shadow-sm">
+                    Login
+                </a>
+                <a href="{% url 'register' %}" class="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-base shadow-sm">
+                    Register
+                </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 w-full max-w-6xl">
+        <main class="w-full">
+            <h2 class="text-4xl font-bold text-center text-main-color my-8">YBS Bus လိုင်းများ အားလုံး</h2>
+
+            {# -- Bus လိုင်းတွေကို JavaScript နဲ့ ဒီနေရာမှာ ပြသပါမယ် -- #}
+            <div id="bus-lines-container" class="bus-line-grid">
+                {# -- Loading message -- #}
+                <div id="loading-message" class="col-span-full text-center text-secondary-color text-xl py-12">
+                    <p>YBS Bus လိုင်းများအား ခေါ်ယူနေပါသည်...</p>
+                </div>
+            </div>
+
+            {# -- Individual Bus Line Details -- #}
+            <div id="bus-line-detail-container" class="mt-8 hidden">
+                <button onclick="hideDetail()" class="mb-4 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-all duration-200">
+                    နောက်သို့
+                </button>
+                <div class="card p-8">
+                    <h3 id="detail-bus-no" class="text-3xl font-bold text-blue-600 dark-theme:text-blue-400 mb-4"></h3>
+                    <div id="detail-description" class="text-lg text-secondary-color mb-4"></div>
+                    <div class="bus-route-list">
+                        <h4 class="text-xl font-semibold text-main-color mb-2">လမ်းကြောင်း</h4>
+                        <ol id="route-list" class="list-decimal list-inside space-y-1 text-secondary-color"></ol>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="mt-8 text-center text-secondary-color text-sm">
+            <p>© 2025 YBS Route Finder. All rights reserved.</p>
+            <p class="mt-1">Helping you navigate Yangon's bus system efficiently.</p>
+        </footer>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const body = document.body;
+        const sunIcon = document.querySelector('.sun-icon');
+        const moonIcon = document.querySelector('.moon-icon');
+        const busLinesContainer = document.getElementById('bus-lines-container');
+        const busLineDetailContainer = document.getElementById('bus-line-detail-container');
+        const loadingMessage = document.getElementById('loading-message');
+
+        // Dark/Light Theme logic
+        function getThemePreference() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                return savedTheme;
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-theme');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                body.classList.remove('dark-theme');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        setTheme(getThemePreference());
+
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = body.classList.contains('dark-theme') ? 'light' : 'dark';
+            setTheme(currentTheme);
+        });
+
+        // Fetch Bus Lines data from API
+        async function fetchBusLines() {
+            try {
+                if (loadingMessage) {
+                    loadingMessage.style.display = 'block';
+                }
+                const response = await fetch('/api/bus_lines/');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const busLines = await response.json();
+                busLinesContainer.innerHTML = '';
+                loadingMessage.style.display = 'none';
+
+                if (busLines.length === 0) {
+                    busLinesContainer.innerHTML = `
+                        <div class="col-span-full text-center text-secondary-color text-xl py-12">
+                            <p>YBS Bus လိုင်းများ မရှိသေးပါ</p>
+                        </div>
+                    `;
+                } else {
+                    busLines.forEach(bus => {
+                        const card = document.createElement('div');
+                        card.className = 'card w-full p-6 flex flex-col space-y-4';
+                        card.innerHTML = `
+                            <div class="flex items-center space-x-4">
+                                <span class="text-xl font-bold text-blue-600 dark-theme:text-blue-400">
+                                    ကားနံပါတ်:
+                                </span>
+                                <span class="text-2xl font-extrabold text-main-color">
+                                    ${bus.bus_no}
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-lg font-medium text-main-color mb-2">
+                                    ဖော်ပြချက်:
+                                </p>
+                                <p class="text-secondary-color leading-relaxed">
+                                    ${bus.description}
+                                </p>
+                            </div>
+                        `;
+                        // Remove the event listener to disable the click functionality
+                        // card.addEventListener('click', () => showBusLineDetail(bus));
+                        busLinesContainer.appendChild(card);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching bus lines:', error);
+                loadingMessage.style.display = 'none';
+                busLinesContainer.innerHTML = `
+                    <div class="col-span-full text-center text-rose-600 text-xl py-12">
+                        <p>Bus လိုင်းများ ခေါ်ယူရာတွင် အမှားအယွင်းတစ်ခု ဖြစ်ပွားခဲ့ပါသည်။</p>
+                        <p class="text-sm text-secondary-color mt-2">Error: API endpoint ကို စစ်ဆေးပါ။</p>
+                    </div>
+                `;
+            }
+        }
+
+        // The showBusLineDetail function is no longer needed since we are disabling the click functionality.
+        // I will comment it out to keep the code clean.
+        /*
+        async function showBusLineDetail(bus) {
+            busLinesContainer.classList.add('hidden');
+            busLineDetailContainer.classList.remove('hidden');
+            document.getElementById('route-list').innerHTML = `<li>လမ်းကြောင်း အချက်အလက်များကို ခေါ်ယူနေပါသည်...</li>`;
+            document.getElementById('detail-bus-no').textContent = `ကားနံပါတ်: ${bus.bus_no}`;
+            document.getElementById('detail-description').textContent = bus.description;
+            try {
+                const response = await fetch(`/api/bus_lines/${bus.id}/route/`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const routeSegments = await response.json();
+                const routeList = document.getElementById('route-list');
+                routeList.innerHTML = '';
+                if (routeSegments.length === 0) {
+                    routeList.innerHTML = `<li>ဤ Bus လိုင်းအတွက် လမ်းကြောင်း အချက်အလက် မရှိသေးပါ</li>`;
+                } else {
+                    const stops = [];
+                    // Add the starting stop of the first segment if it exists
+                    if (routeSegments[0].start_stop_name_mm) {
+                        stops.push(routeSegments[0].start_stop_name_mm);
+                    }
+                    // Loop through the segments and add the end stops
+                    routeSegments.forEach(segment => {
+                        if (segment.end_stop_name_mm) {
+                            stops.push(segment.end_stop_name_mm);
+                        }
+                    });
+
+                    // Use a Set to remove any duplicate stops while maintaining order
+                    const uniqueStops = [...new Set(stops)];
+
+                    if (uniqueStops.length === 0) {
+                        routeList.innerHTML = `<li>ဤ Bus လိုင်းအတွက် လမ်းကြောင်း အချက်အလက် မရှိသေးပါ</li>`;
+                    } else {
+                        uniqueStops.forEach(stop => {
+                            const listItem = document.createElement('li');
+                            listItem.textContent = stop;
+                            routeList.appendChild(listItem);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching route:', error);
+                document.getElementById('route-list').innerHTML = `
+                    <li class="text-rose-600">လမ်းကြောင်း ခေါ်ယူရာတွင် အမှားအယွင်း ဖြစ်ပွားခဲ့ပါသည်။</li>
+                `;
+            }
+        }
+
+        window.hideDetail = function() {
+            busLineDetailContainer.classList.add('hidden');
+            busLinesContainer.classList.remove('hidden');
+        };
+        */
+
+        fetchBusLines();
+    });
+</script>
+</body>
+</html>

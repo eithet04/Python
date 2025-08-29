@@ -1,0 +1,47 @@
+{% extends 'admin_dashboard.html' %}
+
+{% block header_title %}{{ form_title }}{% endblock %} {# Changed from 'title' to 'header_title' #}
+
+{% block content %} {# Changed from 'admin_content' to 'content' #}
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">{{ form_title }}</h1>
+            <a href="{% url 'admin_route_segments' %}" class="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition-all duration-200">
+                Back to Segments
+            </a>
+        </div>
+
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <form action="{{ form_action }}" method="post">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="bus_line" class="block text-sm font-medium text-gray-700">Bus Line</label>
+                        <select name="bus_line" id="bus_line" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">-- Select Bus Line --</option>
+                            {% for line in bus_lines %}
+                                <option value="{{ line.id }}" {% if segment and segment.bus_line.id == line.id %}selected{% endif %}>{{ line.line_number }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="bus_stop" class="block text-sm font-medium text-gray-700">Bus Stop</label>
+                        <select name="bus_stop" id="bus_stop" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">-- Select Bus Stop --</option>
+                            {% for stop in bus_stops %}
+                                <option value="{{ stop.id }}" {% if segment and segment.bus_stop.id == stop.id %}selected{% endif %}>{{ stop.name_en }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label for="order" class="block text-sm font-medium text-gray-700">Order</label>
+                        <input type="number" name="order" id="order" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="{{ segment.order|default:'' }}">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200">Save Segment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

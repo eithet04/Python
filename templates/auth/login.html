@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Bus Route Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Define a base color palette and transitions */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Light mode body background */
+            color: #1e293b; /* Light mode body text */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Dark mode styles for the main body and text */
+        html.dark body {
+            background-color: #0c121e; /* A very dark, almost black, background */
+            color: #f1f5f9; /* Light text for contrast */
+        }
+
+        /* Custom form card colors - This will NOT change in dark mode */
+        .form-card {
+            background-color: #1e293b; /* Consistent deep slate color */
+            color: #e2e8f0; /* Light text for contrast */
+            transition: all 0.3s ease;
+        }
+
+        /* We remove the dark mode specific styling for .form-card here
+           so it stays a consistent dark color regardless of the theme. */
+
+        /* Input field styling */
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #475569; /* slate-600 */
+            background-color: #475569; /* slate-600 */
+            color: #e2e8f0; /* Light text */
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #64748b; /* slate-500 */
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.5);
+        }
+
+        /* Styling for the Django form fields */
+        #id_username, #id_password {
+            @apply form-input;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8">
+    <div class="container mx-auto px-4 w-full max-w-md">
+        <!-- The main form card with its consistent dark color -->
+        <div class="form-card rounded-xl shadow-md p-6 mb-8 relative">
+
+            <div class="flex items-center justify-between mb-6">
+                <!-- Text colors inside the form are now consistent for better contrast -->
+                <a href="{% url 'home' %}" class="text-gray-300 hover:text-gray-100 transition-colors duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </a>
+                <h1 class="text-2xl font-bold text-center text-gray-100">Login</h1>
+                <div></div> <!-- Placeholder for symmetry -->
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="{% if message.tags == 'error' %}bg-red-900 border-red-700 text-red-200{% else %}bg-green-900 border-green-700 text-green-200{% endif %} px-4 py-3 rounded-lg relative mb-6" role="alert">
+                        <span class="block sm:inline">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                <div>
+                    <!-- Consistent label text color -->
+                    <label for="id_username" class="block text-gray-300 text-sm font-medium mb-2">Username</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <!-- Consistent label text color -->
+                    <label for="id_password" class="block text-gray-300 text-sm font-medium mb-2">Password</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg
+                               hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                               transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    Login
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <!-- Consistent text color for the link -->
+                <p class="text-gray-300">Don't have an account? <a href="{% url 'register' %}" class="text-blue-400 hover:text-blue-300 font-medium">Register</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to automatically apply the dark theme from localStorage on page load -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const html = document.documentElement;
+            const currentTheme = localStorage.getItem('theme');
+
+            if (currentTheme) {
+                if (currentTheme === 'dark') {
+                    html.classList.add('dark');
+                } else {
+                    html.classList.remove('dark');
+                }
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                html.classList.add('dark');
+            }
+        });
+    </script>
+</body>
+</html>

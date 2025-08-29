@@ -1,0 +1,44 @@
+{% extends "admin_dashboard.html" %}
+
+{% block header_title %}Route Segments Management{% endblock %}
+
+{% block content %}
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Route Segments</h1>
+            <a href="{% url 'admin_route_segment_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                <i class="fas fa-plus mr-2"></i>Add New Segment
+            </a>
+        </div>
+
+        {% if segments %}
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Line</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Stop</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for segment in segments %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ segment.bus_line.line_number }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ segment.bus_stop.name_en }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ segment.order }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{% url 'admin_route_segment_edit' segment.id %}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
+                            <a href="{% url 'admin_route_segment_delete' segment.id %}" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure you want to delete this route segment?')">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-gray-500">No route segments found. Add one to get started.</p>
+        {% endif %}
+    </div>
+{% endblock %}
