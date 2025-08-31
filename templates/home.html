@@ -347,6 +347,12 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+
+        const betweenStopsBtn = document.getElementById('betweenStopsBtn');
+        const betweenStopsForm = document.getElementById('betweenStopsForm');
+        const betweenStartStopInput = document.getElementById('between_start_stop');
+        const betweenEndStopInput = document.getElementById('between_end_stop');
+
         const busStopSearchBtn = document.getElementById('busStopSearchBtn');
         const busLineSearchBtn = document.getElementById('busLineSearchBtn');
         const busesByStopSearchBtn = document.getElementById('busesByStopSearchBtn');
@@ -437,6 +443,10 @@
 
         // Search form toggling logic
         function toggleSearchType(type) {
+
+            // Between Stops
+            betweenStopsBtn.addEventListener('click', () => toggleSearchType('between_stops'));
+
             // Hide all forms
             busStopForm.classList.add('hidden');
             busLineForm.classList.add('hidden');

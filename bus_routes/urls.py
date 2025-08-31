@@ -1,4 +1,4 @@
-from AppData.Local.Programs.Python.Python313.Lib.test.test_importlib.resources.test_resource import names
+#from AppData.Local.Programs.Python.Python313.Lib.test.test_importlib.resources.test_resource import names
 from django.urls import path
 from . import views
 
@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('search/', views.search_route, name='search_route'),
     path('api/bus_stops/', views.get_bus_stops_json, name='api_bus_stops'),
+    path('between-stops/', views.search_route, name='between_stops'),
 
     # Authentication URLs
     path('register/', views.register_view, name='register'),

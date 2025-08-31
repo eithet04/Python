@@ -20,7 +20,6 @@ OSRM_BASE_URL = "http://router.project-osrm.org/route/v1/driving/"
 
 
 def get_route_details_from_osrm(coords_list):
-
     if not coords_list or len(coords_list) < 2:
         return None, None
 
@@ -57,9 +56,7 @@ def get_route_details_from_osrm(coords_list):
 
 
 def home(request):
-
     bus_stops = BusStop.objects.all().order_by('name_en', 'road_name_en')
-
     saved_routes = None
     if request.user.is_authenticated:
         saved_routes = SavedRoute.objects.filter(user=request.user).order_by('-created_at')
@@ -71,7 +68,6 @@ def home(request):
 
 
 def register_view(request):
-
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -89,8 +85,8 @@ def register_view(request):
 
     return render(request, 'auth/register.html', {'form': form})
 
-def login_view(request):
 
+def login_view(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -111,7 +107,6 @@ def login_view(request):
 
 
 def logout_view(request):
-
     logout(request)
     messages.info(request, 'You have been logged out.')
     return redirect('home')
@@ -155,17 +150,14 @@ def save_route(request):
 
 @login_required
 def delete_saved_route(request, route_id):
-
     route = get_object_or_404(SavedRoute, id=route_id, user=request.user)
     route.delete()
     messages.success(request, 'Route deleted successfully!')
     return redirect('home')
 
 
-
 @login_required
 def saved_route_api(request, route_id):
-
     try:
         saved_route = SavedRoute.objects.get(id=route_id, user=request.user)
         data = {
@@ -181,6 +173,7 @@ def saved_route_api(request, route_id):
         return JsonResponse({'error': 'Route not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 
 @login_required
 def view_saved_route(request, route_id):
@@ -223,8 +216,9 @@ def view_saved_route(request, route_id):
             'end_stop': end_stop
         })
     
-    # Render the search results template with the data
-    return render(request, 'search_results.html', {
+    # Use the view_saved_route.html template
+    return render(request, 'view_saved_route.html', {
+        'saved_route': saved_route,
         'results': results,
         'start_stop': start_stop,
         'end_stop': end_stop,
@@ -233,7 +227,6 @@ def view_saved_route(request, route_id):
 
 
 def parse_stop_name_with_road(full_name):
-
     if '(' in full_name and full_name.endswith(')'):
         parts = full_name.rsplit('(', 1)
         stop_name = parts[0].strip()
@@ -243,7 +236,6 @@ def parse_stop_name_with_road(full_name):
 
 
 def get_bus_stop_object(stop_name_raw):
-
     stop_name, road_name = parse_stop_name_with_road(stop_name_raw)
 
     query = Q(name_en__iexact=stop_name) | Q(name_mm__iexact=stop_name)
@@ -268,7 +260,6 @@ def get_bus_stop_object(stop_name_raw):
 
 
 def find_shortest_path(start_stop_id, end_stop_id):
-
     if start_stop_id == end_stop_id:
         return []
 
@@ -347,7 +338,6 @@ def find_shortest_path(start_stop_id, end_stop_id):
 
 
 def get_segment_details(bus_line, start_stop, end_stop):
-
     start_segment = RouteSegment.objects.filter(bus_line=bus_line, bus_stop=start_stop).first()
     end_segment = RouteSegment.objects.filter(bus_line=bus_line, bus_stop=end_stop).first()
 
@@ -402,9 +392,57 @@ def get_segment_details(bus_line, start_stop, end_stop):
     }
 
 
+def find_stops_between(start_stop, end_stop):
+    """
+    Find all bus lines that connect start_stop and end_stop,
+    and return all stops between them (inclusive) for each line.
+    """
+    results = []
+    
+    # Find bus lines that serve both stops
+    common_bus_lines = BusLine.objects.filter(
+        route_segments__bus_stop=start_stop
+    ).filter(
+        route_segments__bus_stop=end_stop
+    ).distinct()
+    
+    for bus_line in common_bus_lines:
+        # Get all route segments for this bus line, ordered by 'order' field
+        route_segments = RouteSegment.objects.filter(
+            bus_line=bus_line
+        ).order_by('order').select_related('bus_stop')
+        
+        # Find the positions of start and end stops
+        start_position = None
+        end_position = None
+        
+        for i, segment in enumerate(route_segments):
+            if segment.bus_stop == start_stop:
+                start_position = i
+            if segment.bus_stop == end_stop:
+                end_position = i
+        
+        # If both stops found, get all stops between them
+        if start_position is not None and end_position is not None:
+            # Ensure start comes before end (handle both directions)
+            if start_position > end_position:
+                start_position, end_position = end_position, start_position
+            
+            # Get all stops between (inclusive)
+            between_segments = route_segments[start_position:end_position + 1]
+            
+            results.append({
+                'bus_line': bus_line,
+                'stops': [segment.bus_stop for segment in between_segments],
+                'total_stops': len(between_segments),
+                'orders': [segment.order for segment in between_segments]
+            })
+    
+    return results
+
+
 @login_required
 def search_route(request):
-
     start_stop_name_raw = request.GET.get('start_stop', '').strip()
     end_stop_name_raw = request.GET.get('end_stop', '').strip()
     search_type = request.GET.get('search_type', 'bus_stop')
@@ -420,6 +458,46 @@ def search_route(request):
     end_stop_obj = None
     search_count = None
 
+    # Handle 'between_stops' search type
+    if search_type == 'between_stops':
+        if not start_stop_name_raw or not end_stop_name_raw:
+            error_message = "Please provide both start and end stop names."
+            return render(request, 'between_stops_results.html', {
+                'between_stops_results': [],
+                'start_stop': None,
+                'end_stop': None,
+                'error_message': error_message
+            })
+        
+        try:
+            # Parse the stop names to handle road names in parentheses
+            start_stop_obj = get_bus_stop_object(start_stop_name_raw)
+            end_stop_obj = get_bus_stop_object(end_stop_name_raw)
+            
+            if not start_stop_obj:
+                error_message = f"Start stop '{start_stop_name_raw}' not found."
+            elif not end_stop_obj:
+                error_message = f"End stop '{end_stop_name_raw}' not found."
+            else:
+                # Find all stops between these two stops
+                between_stops_results = find_stops_between(start_stop_obj, end_stop_obj)
+                
+                return render(request, 'between_stops_results.html', {
+                    'between_stops_results': between_stops_results,
+                    'start_stop': start_stop_obj,
+                    'end_stop': end_stop_obj,
+                    'error_message': None if between_stops_results else "No bus lines found that connect these stops."
+                })
+        except Exception as e:
+            error_message = f"An error occurred: {str(e)}"
+            return render(request, 'between_stops_results.html', {
+                'between_stops_results': [],
+                'start_stop': None,
+                'end_stop': None,
+                'error_message': error_message
+            })
+
+    # Handle regular bus stop search
     if search_type == 'bus_stop':
         if not start_stop_name_raw or not end_stop_name_raw:
             error_message = "Please enter both start and end bus stops."
@@ -643,7 +721,6 @@ def search_route(request):
 
 
 def get_bus_stops_json(request):
-
     bus_stops = BusStop.objects.all().values('name_mm', 'name_en', 'road_name_mm', 'road_name_en')
     return JsonResponse(list(bus_stops), safe=False)
 
@@ -654,7 +731,6 @@ def is_admin(user):
 
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-
     bus_stops_count = BusStop.objects.count()
     bus_lines_count = BusLine.objects.count()
     route_segments_count = RouteSegment.objects.count()
@@ -676,7 +752,6 @@ def admin_dashboard(request):
 
 @user_passes_test(is_admin)
 def admin_bus_stops(request):
-
     bus_stops_list = BusStop.objects.all().order_by('name_en')
     paginator = Paginator(bus_stops_list, 20)
     page_number = request.GET.get('page')
@@ -691,7 +766,6 @@ def admin_bus_stops(request):
 
 @user_passes_test(is_admin)
 def admin_bus_stop_add(request):
-
     if request.method == 'POST':
         name_en = request.POST.get('name_en')
         name_mm = request.POST.get('name_mm')
@@ -743,7 +817,6 @@ def admin_bus_stop_add(request):
 
 @user_passes_test(is_admin)
 def admin_bus_stop_edit(request, stop_id):
-
     bus_stop = get_object_or_404(BusStop, id=stop_id)
 
     if request.method == 'POST':
@@ -785,7 +858,6 @@ def admin_bus_stop_edit(request, stop_id):
 
 @user_passes_test(is_admin)
 def admin_bus_stop_delete(request, stop_id):
-
     bus_stop = get_object_or_404(BusStop, id=stop_id)
     if request.method == 'POST':
         try:
@@ -803,7 +875,6 @@ def admin_bus_stop_delete(request, stop_id):
 
 @user_passes_test(is_admin)
 def admin_bus_lines(request):
-
     bus_lines_list = BusLine.objects.all().order_by('line_number')
     paginator = Paginator(bus_lines_list, 20)
     page_number = request.GET.get('page')
@@ -818,7 +889,6 @@ def admin_bus_lines(request):
 
 @user_passes_test(is_admin)
 def admin_bus_line_add(request):
-
     if request.method == 'POST':
         line_number = request.POST.get('line_number')
         description = request.POST.get('description')
@@ -850,7 +920,6 @@ def admin_bus_line_add(request):
 
 @user_passes_test(is_admin)
 def admin_bus_line_edit(request, line_id):
-
     bus_line = get_object_or_404(BusLine, id=line_id)
 
     if request.method == 'POST':
@@ -882,7 +951,6 @@ def admin_bus_line_edit(request, line_id):
 
 @user_passes_test(is_admin)
 def admin_bus_line_delete(request, line_id):
-
     bus_line = get_object_or_404(BusLine, id=line_id)
     if request.method == 'POST':
         try:
@@ -900,7 +968,6 @@ def admin_bus_line_delete(request, line_id):
 
 @user_passes_test(is_admin)
 def admin_route_segments(request):
-
     segments_list = RouteSegment.objects.all().order_by('bus_line__line_number', 'order').select_related('bus_line',
                                                                                                          'bus_stop')
     paginator = Paginator(segments_list, 20)
@@ -914,7 +981,6 @@ def admin_route_segments(request):
 
 @user_passes_test(is_admin)
 def admin_route_segment_add(request):
-
     bus_lines = BusLine.objects.all().order_by('line_number')
     bus_stops = BusStop.objects.all().order_by('name_en')
 
@@ -947,7 +1013,6 @@ def admin_route_segment_add(request):
 
 @user_passes_test(is_admin)
 def admin_route_segment_edit(request, segment_id):
-
     segment = get_object_or_404(RouteSegment, id=segment_id)
     bus_lines = BusLine.objects.all().order_by('line_number')
     bus_stops = BusStop.objects.all().order_by('name_en')
@@ -976,7 +1041,6 @@ def admin_route_segment_edit(request, segment_id):
 
 @user_passes_test(is_admin)
 def admin_route_segment_delete(request, segment_id):
-
     segment = get_object_or_404(RouteSegment, id=segment_id)
     if request.method == 'POST':
         try:
@@ -994,7 +1058,6 @@ def admin_route_segment_delete(request, segment_id):
 
 @user_passes_test(is_admin)
 def admin_users(request):
-
     users_list = User.objects.all().order_by('username')
     paginator = Paginator(users_list, 20)
     page_number = request.GET.get('page')
@@ -1005,13 +1068,11 @@ def admin_users(request):
     })
 
 
-# NEW ADMIN VIEWS FOR USERS (Added these)
 @user_passes_test(is_admin)
 def admin_user_edit(request, user_id):
     """Admin view for editing a user."""
     user_to_edit = get_object_or_404(User, id=user_id)
     if request.method == 'POST':
-        # You can add fields to edit here, e.g., is_staff, is_superuser, email
         user_to_edit.email = request.POST.get('email', user_to_edit.email)
         user_to_edit.is_staff = request.POST.get('is_staff') == 'on'
         user_to_edit.is_superuser = request.POST.get('is_superuser') == 'on'
@@ -1026,13 +1087,12 @@ def admin_user_edit(request, user_id):
         'active_tab': 'users',
         'form_title': 'Edit User',
         'form_action': reverse('admin_user_edit', args=[user_id]),
-        'user_obj': user_to_edit  # Renamed to avoid conflict with 'user' in template
+        'user_obj': user_to_edit
     })
 
 
 @user_passes_test(is_admin)
 def admin_user_delete(request, user_id):
-
     user_to_delete = get_object_or_404(User, id=user_id)
     if request.method == 'POST':
         try:
@@ -1044,7 +1104,7 @@ def admin_user_delete(request, user_id):
 
     return render(request, 'admin_user_confirm_delete.html', {
         'active_tab': 'users',
-        'user_obj': user_to_delete  # Renamed to avoid conflict with 'user' in template
+        'user_obj': user_to_delete
     })
 
 
@@ -1063,7 +1123,7 @@ def admin_saved_routes(request):
 @user_passes_test(is_admin)
 def admin_saved_route_edit(request, route_id):
     saved_route = get_object_or_404(SavedRoute, id=route_id)
-    bus_stops = BusStop.objects.all().order_by('name_en')  # Needed for dropdowns
+    bus_stops = BusStop.objects.all().order_by('name_en')
 
     if request.method == 'POST':
         saved_route.name = request.POST.get('name')
@@ -1105,12 +1165,9 @@ def admin_saved_route_delete(request, route_id):
 
 
 def all_bus_lines(request):
-
     bus_lines = BusLine.objects.all().order_by('line_number')
     context = {'bus_lines': bus_lines}
     return render(request, 'all_bus_lines.html', context)
-
-
 
 
 def bus_line_route_api(request, bus_line_id):
@@ -1119,10 +1176,8 @@ def bus_line_route_api(request, bus_line_id):
     The segments are ordered by their 'order' field to represent the correct sequence of the route.
     """
     try:
-        # Fetch all route segments for the given bus_line_id, ordered by 'order'
         route_segments = RouteSegment.objects.filter(bus_line_id=bus_line_id).order_by('order')
 
-        # Manually serialize the data to include stop names
         data = []
         for segment in route_segments:
             data.append({
@@ -1133,7 +1188,6 @@ def bus_line_route_api(request, bus_line_id):
             })
         return JsonResponse(data, safe=False)
     except Exception as e:
-        # In case of any error, return a 500 status with an error message
         return JsonResponse({'error': str(e)}, status=500)
 
 
@@ -1143,26 +1197,21 @@ def rangoon_map(request):
 
 
 def complaint_numbers(request):
-
     bus_lines = BusLine.objects.all().order_by('line_number')
     context = {'bus_lines': bus_lines}
     return render(request, 'complaint_numbers.html', context)
 
 
-# API endpoint to get complaint numbers for a specific bus line
 def get_complaint_numbers_api(request, line_number):
     """
     Returns complaint numbers for a specific bus line as JSON.
     For demonstration, hardcoded data is used. In a real app, this would come from a DB.
     """
-    # Hardcoded complaint numbers for demonstration
-    # In a real application, you would fetch this from your database
     complaint_data = {
         'YBS 1': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
             'Golden Yangon City Transportation Public Co.,Ltd (GYCT)': ['09 443144471', '09 428045840', '09 683011360']
         },
-
         'YBS 11': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
             'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
@@ -1193,37 +1242,27 @@ def get_complaint_numbers_api(request, line_number):
             'Powe Eleven Public Co.,Ltd (POWER ELEVEN)': ['09 5062382', '09 456060069', '09 456060096',
                                                             '09 466060099']
         },
-        # Add more YBS lines and their complaint numbers as needed
     }
 
     numbers = complaint_data.get(line_number, {})
-
-    # If no numbers are found, return an empty object with 200 OK status.
-    # This is a more robust way to handle "no content" for an API endpoint
-    # and prevents potential 500 errors if the frontend expects a 200 OK.
     return JsonResponse(numbers, safe=False)
 
 
-# API endpoint to get all bus lines as a JSON response
 def bus_lines_api(request):
     """
     Retrieves all bus lines from the database and returns them as a JSON response.
     This function is used by the frontend to dynamically load the bus line data.
     """
     try:
-        # Fetch all bus line objects from the database
         bus_lines = BusLine.objects.all()
-        # Convert the queryset into a list of dictionaries manually
         data = []
         for bus in bus_lines:
             data.append({
                 'bus_no': bus.line_number,
                 'description': bus.description
             })
-        # Return the data as a JSON response
         return JsonResponse(data, safe=False)
     except Exception as e:
-        # Handle potential errors and return an error message
         return JsonResponse({'error': str(e)}, status=500)
 
 
@@ -1239,5 +1278,3 @@ def bus_stops_api(request):
 @login_required(login_url='login')
 def all_bus_lines_view(request):
     return render(request, 'all_bus_lines.html')
-
-

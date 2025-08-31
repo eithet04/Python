@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ saved_route.name }} - YBS Route Finder</title>
+    {% load static %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base Styles (Light Mode) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+            color: #1e293b; /* slate-900 */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .card {
+            background-color: white;
+            transition: all 0.3s ease;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .text-main-color {
+            color: #1e293b;
+        }
+        .text-secondary-color {
+            color: #64748b;
+        }
+        .bg-secondary {
+            background-color: #e2e8f0; /* slate-200 */
+        }
+
+        /* Dark Mode Styles */
+        body.dark-theme {
+            background-color: #0f172a; /* slate-900 */
+            color: #e2e8f0; /* slate-200 */
+        }
+        body.dark-theme .card {
+            background-color: #1e293b; /* slate-800 */
+        }
+        body.dark-theme .text-main-color {
+            color: #e2e8f0;
+        }
+        body.dark-theme .text-secondary-color {
+            color: #94a3b8;
+        }
+        body.dark-theme .bg-secondary {
+            background-color: #334155; /* slate-700 */
+        }
+
+        .route-info {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        .bus-line-card {
+            background-color: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            transition: all 0.2s ease;
+        }
+        .bus-line-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        body.dark-theme .bus-line-card {
+            background-color: #374151;
+            border-left-color: #60a5fa;
+        }
+        .stop-item {
+            transition: all 0.2s ease;
+        }
+        .stop-item:hover {
+            background-color: #f8fafc;
+            transform: translateX(5px);
+        }
+        body.dark-theme .stop-item:hover {
+            background-color: #374151;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Theme Toggle (Top Right) -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="theme-toggle" class="p-3 rounded-full bg-secondary text-main-color hover:bg-gray-300 dark-theme:hover:bg-slate-600 transition-all duration-200">
+            <svg class="w-6 h-6 sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1m-16 0H3m15.636 6.364l-.707.707M6.343 6.343l-.707-.707m12.728 0l-.707-.707M6.343 17.657l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+            <svg class="w-6 h-6 moon-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Back Button -->
+        <div class="mb-6">
+            <a href="{% url 'home' %}" class="inline-flex items-center px-4 py-2 bg-secondary text-main-color rounded-lg hover:bg-gray-300 dark-theme:hover:bg-slate-600 transition-all duration-200">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back to Home
+            </a>
+        </div>
+
+        <!-- Saved Route Header -->
+        <div class="card p-6 mb-6 route-info">
+            <h1 class="text-3xl font-bold mb-2">{{ saved_route.name }}</h1>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                <div class="text-lg mb-2 sm:mb-0">
+                    <span class="font-medium">{{ saved_route.start_stop.name_en }}</span>
+                    {% if saved_route.start_stop.road_name_en %}
+                        <span class="text-blue-200">({{ saved_route.start_stop.road_name_en }})</span>
+                    {% endif %}
+                    <span class="mx-3 text-2xl">→</span>
+                    <span class="font-medium">{{ saved_route.end_stop.name_en }}</span>
+                    {% if saved_route.end_stop.road_name_en %}
+                        <span class="text-blue-200">({{ saved_route.end_stop.road_name_en }})</span>
+                    {% endif %}
+                </div>
+                <div class="text-sm text-blue-200">
+                    Saved on {{ saved_route.created_at|date:"M d, Y" }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Route Results -->
+        {% if results %}
+            {% for result in results %}
+                <div class="card p-6 mb-6">
+                    {% if result.type == 'direct' %}
+                        <h2 class="text-2xl font-bold text-main-color mb-4 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Direct Bus Lines
+                        </h2>
+                        <div class="grid gap-4">
+                            {% for bus_line in result.bus_lines %}
+                                <div class="bus-line-card p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h3 class="text-xl font-bold text-blue-600 dark-theme:text-blue-400">Bus Line {{ bus_line.line_number }}</h3>
+                                            <p class="text-secondary-color">{{ bus_line.name_en }}</p>
+                                            {% if bus_line.name_mm %}
+                                                <p class="text-secondary-color text-sm">{{ bus_line.name_mm }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-lg font-semibold text-green-600">Direct Route</div>
+                                            <div class="text-sm text-secondary-color">No transfers needed</div>
+                                            <a href="{% url 'search_route' %}?search_type=between_stops&start_stop={{ saved_route.start_stop.name_en }}{% if saved_route.start_stop.road_name_en %} ({{ saved_route.start_stop.road_name_en }}){% endif %}&end_stop={{ saved_route.end_stop.name_en }}{% if saved_route.end_stop.road_name_en %} ({{ saved_route.end_stop.road_name_en }}){% endif %}&bus_line={{ bus_line.line_number }}" 
+                                               class="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full hover:bg-blue-200 transition-all duration-200 dark-theme:bg-blue-900 dark-theme:text-blue-200">
+                                                View All Stops Between
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% elif result.type == 'shortest_path' %}
+                        <h2 class="text-2xl font-bold text-main-color mb-4 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2l6 3 6-3v15l-6 3-6-3z"></path>
+                            </svg>
+                            Alternative Route (with transfers)
+                        </h2>
+                        <div class="space-y-4">
+                            {% for step in result.path %}
+                                <div class="bus-line-card p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h3 class="text-lg font-bold text-blue-600 dark-theme:text-blue-400">
+                                                Step {{ forloop.counter }}: Bus Line {{ step.bus_line.line_number }}
+                                            </h3>
+                                            <p class="text-secondary-color">{{ step.bus_line.name_en }}</p>
+                                            <div class="text-sm text-secondary-color mt-1">
+                                                From: <span class="font-medium">{{ step.from_stop.name_en }}</span>
+                                                {% if step.from_stop.road_name_en %} ({{ step.from_stop.road_name_en }}){% endif %}
+                                                <br>
+                                                To: <span class="font-medium">{{ step.to_stop.name_en }}</span>
+                                                {% if step.to_stop.road_name_en %} ({{ step.to_stop.road_name_en }}){% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-medium text-orange-600">
+                                                {% if not forloop.last %}Transfer Required{% else %}Final Destination{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% elif result.type == 'between_stops' %}
+                        <h2 class="text-2xl font-bold text-main-color mb-4 flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            All Stops Between - Bus Line {{ result.bus_line.line_number }}
+                        </h2>
+                        
+                        <div class="text-secondary-color mb-4">
+                            <p class="font-medium">{{ result.bus_line.name_en }}</p>
+                            {% if result.bus_line.name_mm %}
+                                <p class="text-sm">{{ result.bus_line.name_mm }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Journey Overview -->
+                        <div class="bg-blue-50 dark-theme:bg-slate-700 p-4 rounded-lg mb-4">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-blue-800 dark-theme:text-blue-300 font-medium">Total Stops: {{ result.total_stops }}</span>
+                                <span class="text-blue-800 dark-theme:text-blue-300 font-medium">Estimated Time: {{ result.total_stops|add:"-1"|floatformat:0 }} stops</span>
+                            </div>
+                        </div>
+
+                        <!-- All Stops List -->
+                        <div class="bg-gray-50 dark-theme:bg-slate-800 rounded-lg p-4">
+                            <h3 class="font-bold text-main-color mb-3 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                </svg>
+                                Complete Journey Route
+                            </h3>
+                            <div class="space-y-2">
+                                {% for stop in result.stops %}
+                                    <div class="stop-item flex items-center p-3 rounded-lg border-l-4 
+                                              {% if stop == saved_route.start_stop %}border-green-500 bg-green-50 dark-theme:bg-green-900
+                                              {% elif stop == saved_route.end_stop %}border-red-500 bg-red-50 dark-theme:bg-red-900
+                                              {% else %}border-blue-300 bg-white dark-theme:bg-slate-700 dark-theme:border-blue-500{% endif %}">
+                                        <div class="flex-shrink-0 mr-4">
+                                            {% if stop == saved_route.start_stop %}
+                                                <div class="w-4 h-4 bg-green-500 rounded-full"></div>
+                                            {% elif stop == saved_route.end_stop %}
+                                                <div class="w-4 h-4 bg-red-500 rounded-full"></div>
+                                            {% else %}
+                                                <div class="w-4 h-4 bg-blue-400 rounded-full"></div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow">
+                                            <div class="font-medium text-main-color">
+                                                {{ stop.name_en }}
+                                                {% if stop == saved_route.start_stop %}
+                                                    <span class="text-green-600 font-bold text-sm ml-2">(START)</span>
+                                                {% elif stop == saved_route.end_stop %}
+                                                    <span class="text-red-600 font-bold text-sm ml-2">(END)</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if stop.road_name_en %}
+                                                <div class="text-sm text-secondary-color">{{ stop.road_name_en }}</div>
+                                            {% endif %}
+                                            {% if stop.name_mm %}
+                                                <div class="text-sm text-secondary-color">{{ stop.name_mm }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-right text-sm text-secondary-color">
+                                            Stop #{{ forloop.counter }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- No Routes Found -->
+            <div class="card p-8 text-center">
+                <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-secondary-color mb-2">No Routes Found</h2>
+                <p class="text-secondary-color">Unfortunately, no bus routes were found between these stops.</p>
+            </div>
+        {% endif %}
+
+        <!-- Route Actions -->
+        <div class="card p-6 mt-6">
+            <h3 class="text-xl font-bold text-main-color mb-4">Route Actions</h3>
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                <a href="{% url 'search_route' %}?search_type=bus_stop&start_stop={{ saved_route.start_stop.name_en }}{% if saved_route.start_stop.road_name_en %} ({{ saved_route.start_stop.road_name_en }}){% endif %}&end_stop={{ saved_route.end_stop.name_en }}{% if saved_route.end_stop.road_name_en %} ({{ saved_route.end_stop.road_name_en }}){% endif %}" 
+                   class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-center">
+                    Search Routes Again
+                </a>
+               <a href="{% url 'search_route' %}?search_type=between_stops&start_stop={{ saved_route.start_stop.name_en }}{% if saved_route.start_stop.road_name_en %} ({{ saved_route.start_stop.road_name_en }}){% endif %}&end_stop={{ saved_route.end_stop.name_en }}{% if saved_route.end_stop.road_name_en %} ({{ saved_route.end_stop.road_name_en }}){% endif %}" 
+                    class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 text-center">
+                        View All Stops Between
+                    </a>
+                <a href="{% url 'delete_saved_route' saved_route.id %}" 
+                   class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 text-center"
+                   onclick="return confirm('Are you sure you want to delete this saved route?')">
+                    Delete Route
+                </a>
+                <a href="{% url 'home' %}" 
+                   class="px-6 py-3 bg-secondary text-main-color rounded-lg hover:bg-gray-300 dark-theme:hover:bg-slate-600 transition-all duration-200 text-center">
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const body = document.body;
+            const sunIcon = document.querySelector('.sun-icon');
+            const moonIcon = document.querySelector('.moon-icon');
+
+            // Theme functionality
+            function getThemePreference() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    return savedTheme;
+                }
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    body.classList.add('dark-theme');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                } else {
+                    body.classList.remove('dark-theme');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                }
+                localStorage.setItem('theme', theme);
+            }
+
+            // Initial theme setting
+            setTheme(getThemePreference());
+
+            // Theme toggle event
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = body.classList.contains('dark-theme') ? 'light' : 'dark';
+                setTheme(currentTheme);
+            });
+        });
+    </script>
+</body>
+</html>
