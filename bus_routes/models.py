@@ -94,6 +94,7 @@ class SavedRoute(models.Model):
         verbose_name_plural = "Saved Routes"
         ordering = ['-created_at']
 
+
 class RouteSearch(models.Model):
     start_stop = models.ForeignKey(BusStop, related_name='searches_as_start', on_delete=models.CASCADE)
     end_stop = models.ForeignKey(BusStop, related_name='searches_as_end', on_delete=models.CASCADE)
@@ -102,3 +103,19 @@ class RouteSearch(models.Model):
 
     def __str__(self):
         return f"Search from {self.start_stop.name_en} to {self.end_stop.name_en}"
+
+
+class Complaint(models.Model):
+    """Represents a complaint submitted by a user."""
+    email = models.EmailField(verbose_name="Email")
+    bus_line = models.ForeignKey(BusLine, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Bus Line")
+    message = models.TextField(verbose_name="Complaint Message")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Date Submitted")
+
+    def __str__(self):
+        return f"Complaint from {self.email} on {self.created_at.strftime('%Y-%m-%d')}"
+
+    class Meta:
+        verbose_name = "Complaint"
+        verbose_name_plural = "Complaints"
+        ordering = ['-created_at']

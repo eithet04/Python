@@ -73,11 +73,11 @@
         .modal-content {
             background-color: #fefefe;
             margin: auto;
-            padding: 20px;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 24px; /* Increased padding */
+            border-radius: 1rem; /* Slightly more rounded corners */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             width: 90%;
-            max-width: 500px;
+            max-width: 600px; /* Increased max-width */
             position: relative;
         }
         .modal-content.dark-theme {
@@ -190,10 +190,21 @@
         <h2 class="text-4xl font-bold text-center text-main-color my-8">YBS Bus လိုင်းများ</h2>
         <p class="text-center text-secondary-color mb-6">တိုင်ကြားလိုသော YBS Bus လိုင်းကို ရွေးချယ်ပါ</p>
 
+        {# -- Display Django Messages here -- #}
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg shadow-md {% if message.tags == 'error' %}bg-rose-100 text-rose-800{% elif message.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <div id="bus-lines-list" class="space-y-4">
             {% for line in bus_lines %}
                 <div class="card p-6 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark-theme:hover:bg-slate-700 transition-colors duration-200"
-                     data-line-number="YBS {{ line.line_number }}"> {# Changed to include "YBS " prefix #}
+                     data-line-number="YBS {{ line.line_number }}">
                     <span class="text-xl font-semibold text-main-color">YBS {{ line.line_number }}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -213,10 +224,41 @@
             <div id="modalBody" class="space-y-4">
                 {# Complaint numbers will be loaded here by JavaScript #}
             </div>
+
             <p class="text-sm text-secondary-color mt-6 text-center">
                 <br>
                 တိုင်ကြားရန်အတွက် ဖုန်းနံပါတ်များကို နှိပ်၍ တိုက်ရိုက်ခေါ်ဆိုနိုင်ပါသည်။
             </p>
+
+            {# -- New Section for Email Complaint -- #}
+            <div class="mt-8 pt-4 border-t border-gray-200 dark-theme:border-gray-700">
+                <h4 class="text-lg font-bold text-main-color mb-4">Submit a Complaint</h4>
+                <div id="form-messages" class="mb-4 hidden"></div>
+                <form id="emailComplaintForm" action="{% url 'submit_complaint' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="line_number" id="emailLineNumber">
+                    <div class="mb-4">
+                        <label for="userEmail" class="block text-sm font-medium text-secondary-color mb-1">Your Email Address</label>
+                        <input type="email" id="userEmail" name="user_email" required
+                               class="w-full p-2 border border-gray-300 rounded-md shadow-sm dark-theme:bg-slate-700 dark-theme:border-slate-600 dark-theme:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mb-4">
+                        <label for="complaintMessage" class="block text-sm font-medium text-secondary-color mb-1">Complaint Message</label>
+                        <textarea id="complaintMessage" name="message" rows="4" required
+                                  class="w-full p-2 border border-gray-300 rounded-md shadow-sm dark-theme:bg-slate-700 dark-theme:border-slate-600 dark-theme:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="consentCheckbox" name="consent" required
+                               class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark-theme:bg-slate-700 dark-theme:border-slate-600">
+                        <label for="consentCheckbox" class="ml-2 block text-sm text-secondary-color">
+                            I confirm the above information is correct.
+                        </label>
+                    </div>
+                    <button type="submit" class="w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+                        Submit Complaint
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -286,20 +328,23 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalBody = document.getElementById('modalBody');
             const busLinesList = document.getElementById('bus-lines-list');
+            const emailLineNumberInput = document.getElementById('emailLineNumber');
+
+            const emailComplaintForm = document.getElementById('emailComplaintForm');
+            const formMessages = document.getElementById('form-messages');
 
             busLinesList.addEventListener('click', async function(event) {
                 let targetCard = event.target.closest('.card');
                 if (targetCard) {
-                    const lineNumber = targetCard.dataset.lineNumber; // This will now include "YBS "
+                    const lineNumber = targetCard.dataset.lineNumber;
                     modalTitle.textContent = `${lineNumber} ကို တိုင်ကြားနိုင်သော ဖုန်းနံပါတ်များ`;
+                    emailLineNumberInput.value = lineNumber; // Set the hidden input value
                     modalBody.innerHTML = '<p class="text-center text-secondary-color">ဖုန်းနံပါတ်များ ခေါ်ယူနေပါသည်...</p>';
                     complaintModal.style.display = 'flex'; // Show the modal
 
                     try {
                         const response = await fetch(`/api/complaint_numbers/${lineNumber}/`);
                         if (!response.ok) {
-                            // If response is not OK, it means a non-200 status (e.g., 404, 500) was returned
-                            // We should still try to parse JSON if available for more specific error messages
                             let errorText = `HTTP error! status: ${response.status}`;
                             try {
                                 const errorData = await response.json();
@@ -313,7 +358,7 @@
                         }
                         const data = await response.json();
 
-                        modalBody.innerHTML = ''; // Clear loading message
+                        modalBody.innerHTML = '';
 
                         if (Object.keys(data).length === 0) {
                             modalBody.innerHTML = '<p class="text-center text-secondary-color">ဤ YBS လိုင်းအတွက် တိုင်ကြားရန် ဖုန်းနံပါတ်များ မရှိသေးပါ</p>';
@@ -343,13 +388,62 @@
                 }
             });
 
+            // Handle form submission with Fetch API
+            emailComplaintForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent the default form submission (page reload)
+
+                const submitButton = event.target.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.textContent;
+                submitButton.textContent = 'Submitting...';
+                submitButton.disabled = true;
+
+                const formData = new FormData(emailComplaintForm);
+                const actionUrl = emailComplaintForm.getAttribute('action');
+
+                formMessages.classList.add('hidden');
+                formMessages.innerHTML = '';
+
+                try {
+                    const response = await fetch(actionUrl, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        formMessages.innerHTML = `<div class="p-4 rounded-lg shadow-md bg-green-100 text-green-800">${data.message}</div>`;
+                        formMessages.classList.remove('hidden');
+                        emailComplaintForm.reset(); // Clear the form
+                    } else {
+                        formMessages.innerHTML = `<div class="p-4 rounded-lg shadow-md bg-rose-100 text-rose-800">${data.error}</div>`;
+                        formMessages.classList.remove('hidden');
+                        if (data.redirect_url) {
+                            // If the backend sends a redirect URL, go to that page
+                            window.location.href = data.redirect_url;
+                        }
+                    }
+                } catch (error) {
+                    formMessages.innerHTML = `<div class="p-4 rounded-lg shadow-md bg-rose-100 text-rose-800">A network error occurred: ${error.message}</div>`;
+                    formMessages.classList.remove('hidden');
+                } finally {
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
+                }
+            });
+
             closeButton.addEventListener('click', function() {
                 complaintModal.style.display = 'none'; // Hide the modal
+                formMessages.classList.add('hidden'); // Also hide the messages
             });
 
             window.addEventListener('click', function(event) {
                 if (event.target == complaintModal) {
                     complaintModal.style.display = 'none'; // Hide modal if clicked outside
+                    formMessages.classList.add('hidden'); // Also hide the messages
                 }
             });
         });

@@ -14,7 +14,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, SavedRouteForm
-from .models import BusStop, BusLine, RouteSegment, UserProfile, SavedRoute, RouteSearch
+from .models import BusStop, BusLine, RouteSegment, UserProfile, SavedRoute, RouteSearch, Complaint
 
 OSRM_BASE_URL = "http://router.project-osrm.org/route/v1/driving/"
 
@@ -72,11 +72,27 @@ def register_view(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password2')
+
+            # Check if password has at least 8 characters and contains at least one digit
+            if len(password) < 8 or not any(char.isdigit() for char in password):
+                messages.error(request, 'Password must be at least 8 characters long and contain at least one digit.')
+                return render(request, 'auth/register.html', {'form': form})
+
+            # Check if a user with this username already exists
             if User.objects.filter(username=username).exists():
                 messages.error(request, 'This username is already taken. Please choose another one.')
                 return render(request, 'auth/register.html', {'form': form})
 
-            user = form.save()
+            # Check if a user with this email already exists
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'This email is already registered. Please use a different one.')
+                return render(request, 'auth/register.html', {'form': form})
+
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.save()
+
             login(request, user)
             messages.success(request, 'Registration successful!')
             return redirect('home')
@@ -92,14 +108,14 @@ def login_view(request):
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+            user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Welcome back, {username}!')
                 next_page = request.GET.get('next', 'home')
                 return redirect(next_page)
-        else:
-            messages.error(request, 'Invalid username or password.')
+            else:
+                messages.error(request, 'Invalid username or password.')
     else:
         form = CustomAuthenticationForm()
 
@@ -970,9 +986,11 @@ def admin_bus_line_delete(request, line_id):
 def admin_route_segments(request):
     segments_list = RouteSegment.objects.all().order_by('bus_line__line_number', 'order').select_related('bus_line',
                                                                                                          'bus_stop')
-    paginator = Paginator(segments_list, 20)
+
+    paginator = Paginator(segments_list, 20)  # Show 20 segments per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
     return render(request, 'admin_route_segments.html', {
         'active_tab': 'route_segments',
         'segments': page_obj
@@ -1278,3 +1296,54 @@ def bus_stops_api(request):
 @login_required(login_url='login')
 def all_bus_lines_view(request):
     return render(request, 'all_bus_lines.html')
+
+def complaints_view(request):
+    """
+    Renders the complaints page and fetches all complaints from the database.
+    """
+    complaints = Complaint.objects.all().order_by('-created_at')
+    context = {
+        'complaints': complaints,
+        'active_tab': 'complaints'
+    }
+    return render(request, 'admin_complaints.html', context)
+
+
+
+def submit_complaint_view(request):
+    """
+    Handles the submission of a new complaint from the modal form.
+    Validates that the submitted email matches the authenticated user's email.
+    """
+    # Check if the user is authenticated (logged in)
+    if not request.user.is_authenticated:
+        # Return JSON response for unauthenticated users
+        return JsonResponse(
+            {"success": False, "error": "Please log in to submit a complaint.", "redirect_url": reverse('login')})
+
+    email = request.POST.get('user_email')
+    line_number = request.POST.get('line_number')
+    message = request.POST.get('message')
+
+    # Basic validation for all fields
+    if not email or not line_number or not message:
+        return JsonResponse({"success": False, "error": "All fields are required."})
+
+    # Compare the submitted email with the logged-in user's email
+    if email != request.user.email:
+        # Return a more user-friendly and specific error message
+        return JsonResponse({"success": False,
+                             "error": "Your submitted email does not match the email associated with your logged-in account. Please make sure you are using the correct email."})
+
+    try:
+        bus_line = BusLine.objects.get(line_number=line_number.replace('YBS ', ''))
+        Complaint.objects.create(email=email, bus_line=bus_line, message=message)
+        # Return success JSON response
+        return JsonResponse({"success": True, "message": "Your complaint has been submitted successfully."})
+
+    except BusLine.DoesNotExist:
+        # This case should ideally not happen based on the front-end logic
+        return JsonResponse({"success": False, "error": "The specified bus line does not exist."})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "error": f"An error occurred: {e}"})

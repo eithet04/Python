@@ -1,0 +1,40 @@
+{% extends "admin_dashboard.html" %}
+
+{% block header_title %}Complaints{% endblock %}
+
+{% block content %}
+<div class="card bg-white overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="font-bold text-gray-800">User Complaints</h2>
+    </div>
+    <div class="p-6">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Line</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Complaint</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Submitted</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for complaint in complaints %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ complaint.email }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ complaint.bus_line }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-pre-wrap max-w-lg">{{ complaint.message }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ complaint.created_at|date:"M d, Y" }}</td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No new complaints.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
