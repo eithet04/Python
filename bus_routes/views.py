@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-
+from django.db.models import Count, Q
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, SavedRouteForm
 from .models import BusStop, BusLine, RouteSegment, UserProfile, SavedRoute, RouteSearch, Complaint
 
@@ -747,24 +747,47 @@ def is_admin(user):
 
 @user_passes_test(is_admin)
 def admin_dashboard(request):
+    # Overall statistics
     bus_stops_count = BusStop.objects.count()
     bus_lines_count = BusLine.objects.count()
     route_segments_count = RouteSegment.objects.count()
     users_count = User.objects.count()
 
+    # Recent Saved Routes (getting the latest 10)
+    # This query already works correctly because it's fetching full SavedRoute objects.
     recent_saved_routes = SavedRoute.objects.all().order_by('-created_at')[:10]
+
+    # Stops missing coordinates (as per your code)
     stops_missing_coords = BusStop.objects.filter(Q(latitude__isnull=True) | Q(longitude__isnull=True))[:10]
 
-    return render(request, 'admin_dashboard.html', {
+    # Top Saved Routes
+    # The .values() method is updated to fetch the 'name_en' from the related BusStop objects.
+    top_saved_routes = SavedRoute.objects.values(
+        'start_stop__name_en', 'end_stop__name_en'
+    ).annotate(
+        saved_count=Count('id')
+    ).order_by('-saved_count')[:10]
+
+    # Top Searched Routes
+    # Similarly, this query is updated to get the bus stop names directly.
+    top_searched_routes = RouteSearch.objects.values(
+        'start_stop__name_en', 'end_stop__name_en'
+    ).annotate(
+        search_count=Count('id')
+    ).order_by('-search_count')[:10]
+
+    context = {
         'active_tab': 'dashboard',
         'bus_stops_count': bus_stops_count,
         'bus_lines_count': bus_lines_count,
         'route_segments_count': route_segments_count,
         'users_count': users_count,
         'recent_saved_routes': recent_saved_routes,
-        'stops_missing_coords': stops_missing_coords
-    })
-
+        'stops_missing_coords': stops_missing_coords,
+        'top_saved_routes': top_saved_routes,
+        'top_searched_routes': top_searched_routes,
+    }
+    return render(request, 'admin_dashboard.html', context)
 
 @user_passes_test(is_admin)
 def admin_bus_stops(request):
