@@ -433,7 +433,7 @@
                                    class="route-card p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer">
                                     <span class="bus-icon text-sm mr-2">Bus {{ result.bus_line_number }}</span>
                                     <span class="text-gray-700 text-base">
-                                        Full Line: {{ result.full_line_start_stop_name }} to {{ result.full_line_end_stop_name }}
+                                        {{ result.bus_description }}
                                     </span>
                                     <span class="text-gray-500 text-sm ml-2">({{ result.stops_count }} stops, {{ result.total_distance_km }} km, {{ result.total_time_minutes }} mins)</span>
                                 </a>

@@ -704,6 +704,8 @@ def search_route(request):
 
                                 found_bus_lines_info.append({
                                     'bus_line_number': bus_line.line_number,
+                                    'bus_description': bus_line.description,
+
                                     'stops_count': all_line_segments.count(),
                                     'total_distance_km': round(total_line_distance,
                                                                2) if total_line_distance is not None else 'N/A',
