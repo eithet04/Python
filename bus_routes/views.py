@@ -31,10 +31,14 @@ def get_route_details_from_osrm(coords_list):
     coordinates_str = ";".join([f"{lon},{lat}" for lat, lon in valid_coords])
     url = f"{OSRM_BASE_URL}{coordinates_str}?overview=false"
 
+    print(f"OSRM URL: {url}")
+
     try:
         response = requests.get(url, timeout=5)
         response.raise_for_status()
         data = response.json()
+
+        print(f"OSRM Response: {data.get('code', 'No code')}")
 
         if data and data['code'] == 'Ok' and data['routes']:
             route = data['routes'][0]
@@ -49,7 +53,7 @@ def get_route_details_from_osrm(coords_list):
             return None, None
     except requests.exceptions.RequestException as e:
         print(f"Error calling OSRM API: {e}")
-        return None, None
+        return calculate_haversine_distance(coords_list)
     except Exception as e:
         print(f"An unexpected error occurred while processing OSRM response: {e}")
         return None, None
@@ -241,6 +245,42 @@ def view_saved_route(request, route_id):
         'error_message': None if results else "No routes found between these stops."
     })
 
+def calculate_haversine_distance(coords_list):
+    """
+    Calculate approximate distance using Haversine formula.
+    
+    Args:
+        coords_list: List of (latitude, longitude) tuples representing route coordinates
+        
+    Returns:
+        tuple: (total_distance_km, estimated_time_minutes) or (None, None) if insufficient coordinates
+    """
+    if len(coords_list) < 2:
+        return None, None
+    
+    from math import radians, cos, sin, asin, sqrt
+    
+    total_distance = 0
+    for i in range(len(coords_list) - 1):
+        lat1, lon1 = coords_list[i]
+        lat2, lon2 = coords_list[i + 1]
+        
+        # Convert degrees to radians
+        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+        
+        # Haversine formula
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+        c = 2 * asin(sqrt(a))
+        r = 6371  # Earth's radius in kilometers
+        total_distance += c * r
+    
+    # Estimate time assuming 25 km/h average speed for city bus
+    estimated_time = (total_distance / 25) * 60  # minutes
+    
+    return total_distance, estimated_time
+
 
 def parse_stop_name_with_road(full_name):
     if '(' in full_name and full_name.endswith(')'):
@@ -249,6 +289,14 @@ def parse_stop_name_with_road(full_name):
         road_name = parts[1][:-1].strip()
         return stop_name, road_name
     return full_name, None
+
+def check_coordinate_coverage():
+    total_stops = BusStop.objects.count()
+    stops_with_coords = BusStop.objects.filter(
+        latitude__isnull=False, 
+        longitude__isnull=False
+    ).count()
+    print(f"Coordinate coverage: {stops_with_coords}/{total_stops} ({stops_with_coords/total_stops*100:.1f}%)")
 
 
 def get_bus_stop_object(stop_name_raw):
