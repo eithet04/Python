@@ -1333,6 +1333,35 @@ def get_complaint_numbers_api(request, line_number):
             'Powe Eleven Public Co.,Ltd (POWER ELEVEN)': ['09 5062382', '09 456060069', '09 456060096',
                                                             '09 466060099']
         },
+        'YBS 38': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Bandoola Transport Public Co.,Ltd (BDL)': ['09 73023290', '09 773027939', '09 26289646']
+        },
+        'YBS 56': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Omni Focus General Service Public Co.,Ltd (OMNI FOCUS)': ['09 43197277', '09 401756638', '09 788888945']
+        },
+        'YBS 57': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Golden Yangon City Transportation Public Co.,Ltd (GYTC)': ['09 443144471', '09 428045840', '09 683011360']
+        },
+        'YBS 58': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 140': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Omni Focus General Service Public Co.,Ltd (OMNI FOCUS)': ['09 43197277', '09 401756638', '09 788888945']
+        },
+        'YBS 55': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Bandoola Transport Public Co.,Ltd (BDL)': ['09 73023290', '09 773027939', '09 26289646']
+        },
+        'YBS 130': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Sanwai La Co.,Ltd (SANWAI LA)': ['09 740999102', '09 794887118', '09 896092989']
+        },
+
     }
 
     numbers = complaint_data.get(line_number, {})
