@@ -236,15 +236,25 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="start_stop" class="block text-main-color text-sm font-medium mb-2">Start Bus Stop</label>
-                                <input type="text" id="start_stop" name="start_stop" placeholder="e.g., Hledan (Pyay Road)"
+                                <select id="start_stop" name="start_stop" 
                                     class="w-full px-4 py-3 border border-primary rounded-lg bg-white placeholder-color text-main-color dark-theme:bg-slate-900 dark-theme:text-white dark-theme:border-slate-700 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 input-field shadow-sm"
-                                    list="busStopsList" required>
+                                    required>
+                                    <option value="">-- Select Start Bus Stop --</option>
+                                    {% for stop in bus_stops %}
+                                        <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                             <div>
                                 <label for="end_stop" class="block text-main-color text-sm font-medium mb-2">End Bus Stop</label>
-                                <input type="text" id="end_stop" name="end_stop" placeholder="e.g., Sule (Sule Pagoda Road)"
+                                <select id="end_stop" name="end_stop" 
                                     class="w-full px-4 py-3 border border-primary rounded-lg bg-white placeholder-color text-main-color dark-theme:bg-slate-900 dark-theme:text-white dark-theme:border-slate-700 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 input-field shadow-sm"
-                                    list="busStopsList" required>
+                                    required>
+                                    <option value="">-- Select End Bus Stop --</option>
+                                    {% for stop in bus_stops %}
+                                        <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         <button type="submit"
@@ -277,9 +287,14 @@
                         <input type="hidden" name="search_type" value="buses_by_stop">
                         <div>
                             <label for="single_bus_stop" class="block text-main-color text-sm font-medium mb-2">Search Buses by Stop Name</label>
-                            <input type="text" id="single_bus_stop" name="single_bus_stop" placeholder="e.g., Hledan (Pyay Road)"
+                            <select id="single_bus_stop" name="single_bus_stop" 
                                 class="w-full px-4 py-3 border border-primary rounded-lg bg-white placeholder-color text-main-color dark-theme:bg-slate-900 dark-theme:text-white dark-theme:border-slate-700 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 input-field shadow-sm"
-                                list="busStopsList" required>
+                                required>
+                                <option value="">-- Select Bus Stop --</option>
+                                {% for stop in bus_stops %}
+                                    <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <button type="submit"
                                 class="w-full bg-blue-600 text-white font-bold py-4 px-8 rounded-lg
@@ -301,9 +316,10 @@
                 {% endif %}
 
                 {# -- Datalist for Autocomplete -- #}
-                <datalist id="busStopsList"></datalist>
+                <!-- Remove this line: <datalist id="busStopsList"></datalist> -->
 
             </div>
+
 
             {% if user.is_authenticated and saved_routes %}
                 {# -- Saved Routes Card -- #}
@@ -345,98 +361,173 @@
         </footer>
     </div>
 
+
+<!-- Add this right before the closing </body> tag -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-
-    const busStopSearchBtn = document.getElementById('busStopSearchBtn');
-    const busLineSearchBtn = document.getElementById('busLineSearchBtn');
-    const busesByStopSearchBtn = document.getElementById('busesByStopSearchBtn');
-
-    const busStopForm = document.getElementById('busStopForm');
-    const busLineForm = document.getElementById('busLineForm');
-    const busesByStopForm = document.getElementById('busesByStopForm');
-
-    const startStopInput = document.getElementById('start_stop');
-    const endStopInput = document.getElementById('end_stop');
-    const busLineNumberInput = document.getElementById('bus_line_number');
-    const singleBusStopInput = document.getElementById('single_bus_stop');
-
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const body = document.body;
-    const sunIcon = document.querySelector('.sun-icon');
-    const moonIcon = document.querySelector('.moon-icon');
-
-    // Dark mode functions
-    function getThemePreference() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) return savedTheme;
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    // User location tracking functionality
+    let watchId = null;
+    let userMarker = null;
+    let userAccuracyCircle = null;
+    let map = null;
+    
+    // Initialize map if not already initialized
+    function initializeMap() {
+        if (!map) {
+            map = L.map('user-location-map').setView([16.8661, 96.1951], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+        }
     }
-
-    function setTheme(theme) {
-        if (theme === 'dark') {
-            body.classList.add('dark-theme');
-            sunIcon.classList.add('hidden');
-            moonIcon.classList.remove('hidden');
+    
+    // Start tracking user location
+    function startLocationTracking() {
+        if (navigator.geolocation) {
+            document.getElementById('location-status').textContent = 'Tracking enabled';
+            document.getElementById('location-status').className = 'text-green-600 dark-theme:text-green-400';
+            document.getElementById('toggle-tracking').textContent = 'Disable Tracking';
+            
+            // Initialize map
+            initializeMap();
+            
+            // Start watching position
+            watchId = navigator.geolocation.watchPosition(
+                updatePosition,
+                handleLocationError,
+                { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+            );
         } else {
-            body.classList.remove('dark-theme');
-            sunIcon.classList.remove('hidden');
-            moonIcon.classList.add('hidden');
+            alert('Geolocation is not supported by this browser.');
         }
-        localStorage.setItem('theme', theme);
     }
-
-    setTheme(getThemePreference());
-
-    themeToggleBtn.addEventListener('click', () => {
-        const currentTheme = body.classList.contains('dark-theme') ? 'light' : 'dark';
-        setTheme(currentTheme);
+    
+    // Stop tracking user location
+    function stopLocationTracking() {
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+            document.getElementById('location-status').textContent = 'Tracking disabled';
+            document.getElementById('location-status').className = 'text-red-600 dark-theme:text-red-400';
+            document.getElementById('toggle-tracking').textContent = 'Enable Tracking';
+            
+            // Update server that tracking is disabled
+            updateServerLocation(null, null, null, false);
+        }
+    }
+    
+    // Update position on map and server
+    function updatePosition(position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+        
+        // Update map
+        if (userMarker) {
+            userMarker.setLatLng([latitude, longitude]);
+            if (userAccuracyCircle) {
+                userAccuracyCircle.setLatLng([latitude, longitude]);
+                userAccuracyCircle.setRadius(accuracy);
+            }
+        } else {
+            userMarker = L.marker([latitude, longitude], {
+                icon: L.divIcon({
+                    className: 'user-location-marker',
+                    html: '<div class="pulse"></div>',
+                    iconSize: [20, 20]
+                })
+            }).addTo(map);
+            
+            userAccuracyCircle = L.circle([latitude, longitude], {
+                radius: accuracy,
+                color: '#4299e1',
+                fillColor: '#4299e1',
+                fillOpacity: 0.15
+            }).addTo(map);
+        }
+        
+        // Center map on user location
+        map.setView([latitude, longitude]);
+        
+        // Update location info display
+        document.getElementById('user-lat').textContent = latitude.toFixed(6);
+        document.getElementById('user-lng').textContent = longitude.toFixed(6);
+        document.getElementById('user-accuracy').textContent = accuracy.toFixed(1);
+        
+        // Send to server
+        updateServerLocation(latitude, longitude, accuracy, true);
+    }
+    
+    // Handle location errors
+    function handleLocationError(error) {
+        let errorMessage;
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                errorMessage = "User denied the request for geolocation.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                errorMessage = "Location information is unavailable.";
+                break;
+            case error.TIMEOUT:
+                errorMessage = "The request to get user location timed out.";
+                break;
+            case error.UNKNOWN_ERROR:
+                errorMessage = "An unknown error occurred.";
+                break;
+        }
+        document.getElementById('location-status').textContent = 'Error: ' + errorMessage;
+        document.getElementById('location-status').className = 'text-red-600 dark-theme:text-red-400';
+    }
+    
+    // Update server with location data
+    function updateServerLocation(latitude, longitude, accuracy, is_sharing) {
+        fetch('/api/update_user_location/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                latitude: latitude,
+                longitude: longitude,
+                accuracy: accuracy,
+                is_sharing: is_sharing
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== 'success') {
+                console.error('Error updating location:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Toggle location tracking
+    document.getElementById('toggle-tracking').addEventListener('click', function() {
+        if (watchId === null) {
+            startLocationTracking();
+        } else {
+            stopLocationTracking();
+        }
     });
-
-    // Toggle search type
-    function toggleSearchType(type) {
-        busStopForm.classList.add('hidden');
-        busLineForm.classList.add('hidden');
-        busesByStopForm.classList.add('hidden');
-
-        [busStopSearchBtn, busLineSearchBtn, busesByStopSearchBtn].forEach(btn => {
-            btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
-            btn.classList.add('bg-secondary', 'text-main-color');
-            btn.classList.remove('dark-theme:bg-blue-600', 'dark-theme:text-white', 'dark-theme:shadow-lg');
-            btn.classList.add('dark-theme:bg-slate-700', 'dark-theme:text-slate-300');
-        });
-
-        [startStopInput, endStopInput, busLineNumberInput, singleBusStopInput].forEach(input => {
-            input.removeAttribute('required');
-        });
-
-        if (type === 'bus_stop') {
-            busStopForm.classList.remove('hidden');
-            busStopSearchBtn.classList.remove('bg-secondary', 'text-main-color');
-            busStopSearchBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
-            startStopInput.setAttribute('required', 'true');
-            endStopInput.setAttribute('required', 'true');
-        } else if (type === 'bus_line') {
-            busLineForm.classList.remove('hidden');
-            busLineSearchBtn.classList.remove('bg-secondary', 'text-main-color');
-            busLineSearchBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
-            busLineNumberInput.setAttribute('required', 'true');
-        } else if (type === 'buses_by_stop') {
-            busesByStopForm.classList.remove('hidden');
-            busesByStopSearchBtn.classList.remove('bg-secondary', 'text-main-color');
-            busesByStopSearchBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
-            singleBusStopInput.setAttribute('required', 'true');
-        }
-    }
-
-    busStopSearchBtn.addEventListener('click', () => toggleSearchType('bus_stop'));
-    busLineSearchBtn.addEventListener('click', () => toggleSearchType('bus_line'));
-    busesByStopSearchBtn.addEventListener('click', () => toggleSearchType('buses_by_stop'));
-
-    {% if user.is_authenticated %}
-        toggleSearchType('bus_stop');
-    {% endif %}
-});
 </script>
 </body>
 </html>

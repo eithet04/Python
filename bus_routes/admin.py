@@ -75,3 +75,11 @@ class SavedRouteAdmin(admin.ModelAdmin):
     list_filter = ('user', 'created_at')
     search_fields = ('user__username', 'start_stop__name_en', 'end_stop__name_en', 'name')
     ordering = ('-created_at',)
+
+
+#@admin.register(UserLocation)
+#class UserLocationAdmin(admin.ModelAdmin):
+    #list_display = ('user', 'latitude', 'longitude', 'accuracy', 'timestamp', 'is_sharing')
+    #list_filter = ('user', 'is_sharing', 'timestamp')
+    #search_fields = ('user__username',)
+    #ordering = ('-timestamp',)

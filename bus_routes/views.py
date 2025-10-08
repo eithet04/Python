@@ -13,6 +13,9 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.db.models import Count, Q
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+import json
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, SavedRouteForm
 from .models import BusStop, BusLine, RouteSegment, UserProfile, SavedRoute, RouteSearch, Complaint
 
@@ -1384,6 +1387,62 @@ def bus_lines_api(request):
         return JsonResponse(data, safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required
+def update_user_location(request):
+    """API endpoint to update user's location"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            latitude = data.get('latitude')
+            longitude = data.get('longitude')
+            accuracy = data.get('accuracy')
+            is_sharing = data.get('is_sharing', True)
+            
+            # Get or create user location object
+            user_location, created = UserLocation.objects.get_or_create(
+                user=request.user,
+                defaults={
+                    'latitude': latitude,
+                    'longitude': longitude,
+                    'accuracy': accuracy,
+                    'is_sharing': is_sharing
+                }
+            )
+            
+            # Update if it already exists
+            if not created:
+                user_location.latitude = latitude
+                user_location.longitude = longitude
+                user_location.accuracy = accuracy
+                user_location.is_sharing = is_sharing
+                user_location.save()
+                
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+
+@login_required
+def get_user_location(request):
+    """API endpoint to get user's current location"""
+    try:
+        user_location = UserLocation.objects.filter(user=request.user).first()
+        if user_location and user_location.is_sharing:
+            return JsonResponse({
+                'status': 'success',
+                'latitude': float(user_location.latitude),
+                'longitude': float(user_location.longitude),
+                'accuracy': float(user_location.accuracy) if user_location.accuracy else None,
+                'timestamp': user_location.timestamp.isoformat(),
+                'is_sharing': user_location.is_sharing
+            })
+        return JsonResponse({'status': 'not_found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
 def bus_stops_api(request):
