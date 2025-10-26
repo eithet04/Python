@@ -241,7 +241,7 @@
                                     required>
                                     <option value="">-- Select Start Bus Stop --</option>
                                     {% for stop in bus_stops %}
-                                        <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}</option>
+                                        <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}{% if stop.name_mm %} - {{ stop.name_mm }}{% endif %}{% if stop.road_name_mm %} ({{ stop.road_name_mm }}){% endif %}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -252,7 +252,7 @@
                                     required>
                                     <option value="">-- Select End Bus Stop --</option>
                                     {% for stop in bus_stops %}
-                                        <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}</option>
+                                        <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}{% if stop.name_mm %} - {{ stop.name_mm }}{% endif %}{% if stop.road_name_mm %} ({{ stop.road_name_mm }}){% endif %}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -292,7 +292,7 @@
                                 required>
                                 <option value="">-- Select Bus Stop --</option>
                                 {% for stop in bus_stops %}
-                                    <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}</option>
+                                    <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}{% if stop.name_mm %} - {{ stop.name_mm }}{% endif %}{% if stop.road_name_mm %} ({{ stop.road_name_mm }}){% endif %}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -521,12 +521,77 @@
     }
     
     // Toggle location tracking
-    document.getElementById('toggle-tracking').addEventListener('click', function() {
+    document.getElementById('toggle-tracking')?.addEventListener('click', function() {
         if (watchId === null) {
             startLocationTracking();
         } else {
             stopLocationTracking();
         }
+    });
+    
+    // Search form toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the buttons
+        const busStopSearchBtn = document.getElementById('busStopSearchBtn');
+        const busLineSearchBtn = document.getElementById('busLineSearchBtn');
+        const busesByStopSearchBtn = document.getElementById('busesByStopSearchBtn');
+        
+        // Get the forms
+        const busStopForm = document.getElementById('busStopForm');
+        const busLineForm = document.getElementById('busLineForm');
+        const busesByStopForm = document.getElementById('busesByStopForm');
+        
+        // Function to reset button styles
+        function resetButtonStyles() {
+            busStopSearchBtn.classList.remove('bg-blue-600', 'text-white');
+            busStopSearchBtn.classList.add('bg-secondary', 'text-main-color');
+            
+            busLineSearchBtn.classList.remove('bg-blue-600', 'text-white');
+            busLineSearchBtn.classList.add('bg-secondary', 'text-main-color');
+            
+            busesByStopSearchBtn.classList.remove('bg-blue-600', 'text-white');
+            busesByStopSearchBtn.classList.add('bg-secondary', 'text-main-color');
+        }
+        
+        // Function to hide all forms
+        function hideAllForms() {
+            busStopForm.classList.add('hidden');
+            busLineForm.classList.add('hidden');
+            busesByStopForm.classList.add('hidden');
+        }
+        
+        // Bus Stop Search button click handler
+        busStopSearchBtn.addEventListener('click', function() {
+            resetButtonStyles();
+            hideAllForms();
+            
+            // Show Bus Stop form and highlight button
+            busStopForm.classList.remove('hidden');
+            busStopSearchBtn.classList.remove('bg-secondary', 'text-main-color');
+            busStopSearchBtn.classList.add('bg-blue-600', 'text-white');
+        });
+        
+        // Bus Line Search button click handler
+        busLineSearchBtn.addEventListener('click', function() {
+            resetButtonStyles();
+            hideAllForms();
+            
+            // Show Bus Line form and highlight button
+            busLineForm.classList.remove('hidden');
+            busLineSearchBtn.classList.remove('bg-secondary', 'text-main-color');
+            busLineSearchBtn.classList.add('bg-blue-600', 'text-white');
+        });
+        
+        // Buses By Stop button click handler
+        busesByStopSearchBtn.addEventListener('click', function() {
+            resetButtonStyles();
+            hideAllForms();
+            
+            // Show Buses By Stop form and highlight button
+            busesByStopForm.classList.remove('hidden');
+            busesByStopSearchBtn.classList.remove('bg-secondary', 'text-main-color');
+            busesByStopSearchBtn.classList.add('bg-blue-600', 'text-white');
+        });
     });
 </script>
 </body>
