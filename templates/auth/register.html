@@ -21,32 +21,47 @@
             color: #f1f5f9; /* Light text for contrast */
         }
 
-        /* The form card now has a consistent dark background regardless of theme */
+        /* Custom form card colors with gradient */
         .form-card {
-            background-color: #1e293b; /* Consistent deep slate color */
+            background: linear-gradient(135deg, #2a4365 0%, #1e293b 100%);
+            color: #e2e8f0;
             transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Input field styling for consistency */
+        /* Input field styling with improved aesthetics */
         .form-input {
             width: 100%;
             padding: 0.75rem;
             border-radius: 0.5rem;
-            border: 1px solid #475569; /* slate-600 */
-            background-color: #475569; /* slate-600 */
-            color: #e2e8f0; /* Light text */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
             transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
         }
 
         .form-input:focus {
             outline: none;
-            border-color: #64748b; /* slate-500 */
-            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.5);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            background-color: rgba(255, 255, 255, 0.15);
         }
 
         /* Styling for the Django form fields */
-        #id_username, #id_email, #id_first_name, #id_last_name, #id_preferred_language, #id_password1, #id_password2 {
+        #id_username, #id_email, #id_first_name, #id_last_name, #id_password1, #id_password2 {
             @apply form-input;
+        }
+        
+        /* Add animation for form elements */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-card > * {
+            animation: fadeIn 0.5s ease forwards;
         }
     </style>
 </head>
@@ -55,15 +70,19 @@
         <!-- The main form card with its consistent dark color -->
         <div class="form-card rounded-xl shadow-md p-6 mb-8 relative">
 
-            <div class="flex items-center justify-between mb-6">
-                <!-- Text colors inside the form are now consistent for better contrast -->
-                <a href="{% url 'home' %}" class="text-gray-300 hover:text-gray-100 transition-colors duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <!-- Centered title -->
+            <div class="flex justify-center mb-6">
+                <h1 class="text-3xl font-bold text-center text-white">Register</h1>
+            </div>
+            
+            <!-- Back button -->
+            <div class="flex mb-6">
+                <a href="{% url 'home' %}" class="text-gray-300 hover:text-white transition-colors duration-300 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
+                    <span>Home</span>
                 </a>
-                <h1 class="text-2xl font-bold text-center text-gray-100">Register</h1>
-                <div></div> <!-- Placeholder for symmetry -->
             </div>
 
             {% if messages %}
@@ -110,15 +129,7 @@
                         {% endif %}
                     </div>
                 </div>
-                <!-- Phone number field has been removed as requested -->
-                <div>
-                    <!-- Consistent label text color -->
-                    <label for="id_preferred_language" class="block text-gray-300 text-sm font-medium mb-2">Preferred Language</label>
-                    {{ form.preferred_language }}
-                    {% if form.preferred_language.errors %}
-                        <p class="text-red-400 text-xs mt-1">{{ form.preferred_language.errors.0 }}</p>
-                    {% endif %}
-                </div>
+                <!-- Phone number and preferred language fields have been removed as requested -->
                 <div>
                     <!-- Consistent label text color -->
                     <label for="id_password1" class="block text-gray-300 text-sm font-medium mb-2">Password</label>

@@ -3,7 +3,7 @@ import json
 import requests
 from collections import defaultdict
 from django.contrib import messages
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.core import serializers
@@ -16,7 +16,7 @@ from django.db.models import Count, Q
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import json
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, SavedRouteForm
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, SavedRouteForm, CustomPasswordChangeForm
 from .models import BusStop, BusLine, RouteSegment, UserProfile, SavedRoute, RouteSearch, Complaint
 
 OSRM_BASE_URL = "http://router.project-osrm.org/route/v1/driving/"
@@ -1457,6 +1457,36 @@ def bus_stops_api(request):
 @login_required(login_url='login')
 def all_bus_lines_view(request):
     return render(request, 'all_bus_lines.html')
+
+@login_required
+def profile_view(request):
+    """
+    User profile page: shows username and email (password masked) and allows changing password.
+    """
+    password_form = CustomPasswordChangeForm(user=request.user)
+
+    if request.method == 'POST':
+        password_form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+        if password_form.is_valid():
+            user = password_form.save()
+            update_session_auth_hash(request, user)  # Keep user logged in after change
+            messages.success(request, 'Your password has been updated successfully.')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+
+    # Optional: fetch additional profile info if present
+    user_profile = None
+    try:
+        user_profile = request.user.profile
+    except Exception:
+        user_profile = None
+
+    return render(request, 'profile.html', {
+        'user_obj': request.user,
+        'user_profile': user_profile,
+        'password_form': password_form,
+    })
 
 def complaints_view(request):
     """

@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.models import User
 from .models import UserProfile, SavedRoute
 
@@ -63,6 +63,16 @@ class CustomAuthenticationForm(AuthenticationForm):
     password = forms.CharField(widget=forms.PasswordInput(
         attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200'}))
+
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    """Custom password change form with styled widgets."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in ['old_password', 'new_password1', 'new_password2']:
+            self.fields[field_name].widget.attrs.update({
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200'
+            })
 
 
 class SavedRouteForm(forms.ModelForm):

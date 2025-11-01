@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Profile</title>
+    {% load static %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-card {
+            background: linear-gradient(to bottom right, #ffffff, #f9fafb);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .input-field {
+            background-color: rgba(243, 244, 246, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            transition: all 0.2s ease;
+        }
+        .input-field:focus {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(30, 58, 138, 0.5);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.25);
+        }
+        .gradient-button {
+            background: linear-gradient(to right, #1e40af, #1e3a8a);
+            transition: all 0.3s ease;
+        }
+        .gradient-button:hover {
+            background: linear-gradient(to right, #1e3a8a, #172554);
+            transform: scale(1.02);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .profile-header {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.75rem 0.75rem 0 0;
+        }
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(to right, #1e3a8a, #2563eb);
+            opacity: 0.8;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-100 to-blue-100 text-slate-900">
+<header class="header w-full shadow-md p-4 mb-8 flex justify-between items-center px-8 bg-white">
+    <h1 class="text-2xl font-bold text-blue-900">YBS Route Finder</h1>
+    <div class="flex items-center space-x-3">
+        <a href="{% url 'home' %}" class="px-6 py-2 bg-blue-100 text-blue-900 rounded-lg hover:bg-blue-200 transition-all duration-200">
+            <i class="fas fa-home mr-2"></i>Home
+        </a>
+        <a href="{% url 'logout' %}" class="px-6 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-all duration-200">
+            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+        </a>
+    </div>
+</header>
+
+<div class="container mx-auto px-4 w-full max-w-4xl">
+    {% if messages %}
+        <div class="mb-6 animate-fade-in">
+            {% for message in messages %}
+                <div class="p-4 rounded-lg bg-blue-100 text-blue-900 mb-2 border-l-4 border-blue-700 flex items-center">
+                    <i class="fas fa-info-circle mr-3 text-blue-700"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <h1 class="text-3xl font-bold text-center mb-8 text-blue-900">Your Profile</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <section class="profile-card rounded-xl overflow-hidden animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="profile-header p-5">
+                <div class="relative z-10 flex items-center">
+                    <div class="bg-white p-3 rounded-full mr-4 shadow-md">
+                        <i class="fas fa-user text-2xl text-blue-800"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white">Account Information</h2>
+                </div>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-user-circle text-blue-700 mr-3 text-xl"></i>
+                    <div>
+                        <p class="text-sm text-blue-800 font-medium">Username</p>
+                        <p class="font-semibold text-slate-800">{{ user_obj.username }}</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-envelope text-blue-700 mr-3 text-xl"></i>
+                    <div>
+                        <p class="text-sm text-blue-800 font-medium">Email</p>
+                        <p class="font-semibold text-slate-800">{{ user_obj.email }}</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-key text-blue-700 mr-3 text-xl"></i>
+                    <div>
+                        <p class="text-sm text-blue-800 font-medium">Password</p>
+                        <p class="font-semibold text-slate-800">•••••••• <span class="text-sm text-slate-500">(hidden for security)</span></p>
+                    </div>
+                </div>
+            </div>
+            <!-- Phone number and preferred language fields removed -->
+        </section>
+
+        <section class="profile-card rounded-xl overflow-hidden animate-fade-in" style="animation-delay: 0.2s;">
+            <div class="profile-header p-5">
+                <div class="relative z-10 flex items-center">
+                    <div class="bg-white p-3 rounded-full mr-4 shadow-md">
+                        <i class="fas fa-lock text-2xl text-blue-800"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white">Change Password</h2>
+                </div>
+            </div>
+            <div class="p-6">
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label for="id_old_password" class="block text-sm font-medium text-slate-700 mb-2 flex items-center">
+                            <i class="fas fa-unlock-alt mr-2 text-blue-700"></i>Current Password
+                        </label>
+                        <div class="relative">
+                            {{ password_form.old_password }}
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="fas fa-key text-slate-400"></i>
+                            </div>
+                        </div>
+                        {% if password_form.old_password.errors %}
+                            <p class="text-red-600 text-xs mt-1 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ password_form.old_password.errors.0 }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="id_new_password1" class="block text-sm font-medium text-slate-700 mb-2 flex items-center">
+                            <i class="fas fa-lock mr-2 text-blue-700"></i>New Password
+                        </label>
+                        <div class="relative">
+                            {{ password_form.new_password1 }}
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="fas fa-key text-slate-400"></i>
+                            </div>
+                        </div>
+                        {% if password_form.new_password1.errors %}
+                            <p class="text-red-600 text-xs mt-1 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ password_form.new_password1.errors.0 }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="id_new_password2" class="block text-sm font-medium text-slate-700 mb-2 flex items-center">
+                            <i class="fas fa-check-circle mr-2 text-blue-700"></i>Confirm New Password
+                        </label>
+                        <div class="relative">
+                            {{ password_form.new_password2 }}
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="fas fa-key text-slate-400"></i>
+                            </div>
+                        </div>
+                        {% if password_form.new_password2.errors %}
+                            <p class="text-red-600 text-xs mt-1 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ password_form.new_password2.errors.0 }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="w-full gradient-button text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-save mr-2"></i>Update Password
+                    </button>
+                </form>
+
+                <p class="text-xs text-slate-500 mt-4 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-blue-600"></i>
+                    Passwords must be at least 8 characters and meet site policies.
+                </p>
+            </div>
+        </section>
+    </div>
+</div>
+
+<footer class="mt-12 py-6 text-center text-blue-700 text-sm">
+    <p>© 2023 YBS Route Finder. All rights reserved.</p>
+</footer>
+</body>
+</html>
