@@ -208,6 +208,9 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const busLines = await response.json();
+                // Ensure ascending order by bus number on the client as a safeguard
+                busLines.sort((a, b) => Number(a.bus_no) - Number(b.bus_no));
+                
                 busLinesContainer.innerHTML = '';
                 loadingMessage.style.display = 'none';
 

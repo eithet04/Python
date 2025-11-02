@@ -1377,7 +1377,7 @@ def bus_lines_api(request):
     This function is used by the frontend to dynamically load the bus line data.
     """
     try:
-        bus_lines = BusLine.objects.all()
+        bus_lines = BusLine.objects.all().order_by('line_number')
         data = []
         for bus in bus_lines:
             data.append({
