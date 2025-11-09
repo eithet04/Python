@@ -635,13 +635,27 @@ def search_route(request):
                                     print(f"Error fetching segment details for transfer route: {e}")
                                     continue
 
+                            # Limit displayed steps: show 2 if reachable in two steps, else show 3
                             if transfer_details:
+                                max_steps = 2 if len(transfer_details) <= 2 else 3
+                                display_segments = transfer_details[:max_steps]
+
+                                display_total_distance = sum(
+                                    s['distance_km'] for s in display_segments
+                                    if isinstance(s['distance_km'], (float, int))
+                                )
+                                display_total_time = sum(
+                                    s['time_minutes'] for s in display_segments
+                                    if isinstance(s['time_minutes'], (float, int))
+                                )
+                                display_num_transfers = max(len(display_segments) - 1, 0)
+
                                 results.append({
                                     'route_type': 'transfer',
-                                    'transfer_details': transfer_details,
-                                    'total_distance_km': round(total_distance, 2) if total_distance > 0 else 'N/A',
-                                    'total_time_minutes': round(total_time, 0) if total_time > 0 else 'N/A',
-                                    'num_transfers': num_transfers,
+                                    'transfer_details': display_segments,
+                                    'total_distance_km': round(display_total_distance, 2) if display_total_distance > 0 else 'N/A',
+                                    'total_time_minutes': round(display_total_time, 0) if display_total_time > 0 else 'N/A',
+                                    'num_transfers': display_num_transfers,
                                 })
                             else:
                                 error_message = "No valid transfer route could be constructed."
