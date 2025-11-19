@@ -1320,9 +1320,42 @@ def get_complaint_numbers_api(request, line_number):
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
             'Golden Yangon City Transportation Public Co.,Ltd (GYCT)': ['09 443144471', '09 428045840', '09 683011360']
         },
-        'YBS 11': {
+        'YBS 2': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
             'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 12': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Bandoola Transport Public Co.,Ltd(BDL)': ['09 73023290', '09 773027939', '09 26289646']
+        },
+        'YBS 13': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Bandoola Transport Public Co.,Ltd(BDL)': ['09 73023290', '09 773027939', '09 26289646']
+        },
+        'YBS 16': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Golden Yangon City Transportation Public Co.,Ltd (GYCT)': ['09 443144471', '09 428045840', '09 683011360']
+        },
+        'YBS 7': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 20': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Omni Focus General Service Public Co.,Ltd (OMNI FOCUS)': ['09 43197277', '09 401756638', '09 788888945']
+        },
+        'YBS 21': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Power Eleven Public Co.,Ltd (POWER ELEVEN)': ['09 5062382', '09 456060069', '09 456060096',
+                                                           '09 466060099']        },
+        'YBS 22': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Transport Star Public Co.,Ltd(TRANSPORT STAR)': ['09 5065370', '09 43159893', '09 693504061']
+        },
+
+        'YBS 23': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Sunwai La Public Co.,Ltd (SANWAI LA)': ['09 740999102', '09 896092989', '09 796611335']
         },
         'YBS 66': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
@@ -1347,12 +1380,48 @@ def get_complaint_numbers_api(request, line_number):
         },
         'YBS 131': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
-            'Powe Eleven Public Co.,Ltd (POWER ELEVEN)': ['09 5062382', '09 456060069', '09 456060096',
+            'Power Eleven Public Co.,Ltd (POWER ELEVEN)': ['09 5062382', '09 456060069', '09 456060096',
                                                             '09 466060099']
         },
         'YBS 38': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
             'Bandoola Transport Public Co.,Ltd (BDL)': ['09 73023290', '09 773027939', '09 26289646']
+        },
+        'YBS 35': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Khit Thit Bayint Naung Public Co.,Ltd (KTB)': ['09 43098386', '09 972074499', '09 455798875',
+                                                            '09 795521586']        },
+        'YBS 37': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Bus Public Co.,Ltd (YBPC)': ['09 750943026', '09 451611891', '09 795545458']
+        },
+        'YBS 72': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Bus Public Co.,Ltd (YBPC)': ['09 750943026', '09 451611891', '09 795545458']
+        },
+        'YBS 74': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Rapid City Bus Public Co.,Ltd (RCBT)': ['09 5094551', '09 459777784', '09 250686431']
+        },
+        'YBS 77': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Rapid City Bus Public Co.,Ltd (RCBT)': ['09 5094551', '09 459777784', '09 250686431']
+        },
+        'YBS 81': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Trans Link Public Co.,Ltd (TLPC)': ['09 5062832', '09 456060069', '09 97860563']
+        },
+        'YBS 75': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Khit Thit Bayint Naung Public Co.,Ltd (KTB)': ['09 43098386', '09 972074499', '09 455798875',
+                                                            '09 795521586']},
+        'YBS 107': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Bus Public Co.,Ltd (YBPC)': ['09 750943026', '09 451611891', '09 795545458']
+        },
+        'YBS 104': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Bus Public Co.,Ltd (YBPC)': ['09 750943026', '09 451611891', '09 795545458']
         },
         'YBS 56': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
@@ -1377,6 +1446,22 @@ def get_complaint_numbers_api(request, line_number):
         'YBS 130': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
             'Sanwai La Co.,Ltd (SANWAI LA)': ['09 740999102', '09 794887118', '09 896092989']
+        },
+        'YBS 111': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 112': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 113': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 120': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Trans Link Public Co.,Ltd (TLPC)': ['09 5062832', '09 456060069', '09 97860563']
         },
 
     }
