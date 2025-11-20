@@ -119,3 +119,7 @@ class Complaint(models.Model):
         verbose_name = "Complaint"
         verbose_name_plural = "Complaints"
         ordering = ['-created_at']
+
+
+
+

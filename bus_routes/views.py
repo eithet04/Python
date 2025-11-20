@@ -3,7 +3,7 @@ import json
 import requests
 from collections import defaultdict
 from django.contrib import messages
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.core import serializers
@@ -13,7 +13,10 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.db.models import Count, Q
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, SavedRouteForm
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+import json
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, SavedRouteForm, CustomPasswordChangeForm
 from .models import BusStop, BusLine, RouteSegment, UserProfile, SavedRoute, RouteSearch, Complaint
 
 OSRM_BASE_URL = "http://router.project-osrm.org/route/v1/driving/"
@@ -632,13 +635,27 @@ def search_route(request):
                                     print(f"Error fetching segment details for transfer route: {e}")
                                     continue
 
+                            # Limit displayed steps: show 2 if reachable in two steps, else show 3
                             if transfer_details:
+                                max_steps = 2 if len(transfer_details) <= 2 else 3
+                                display_segments = transfer_details[:max_steps]
+
+                                display_total_distance = sum(
+                                    s['distance_km'] for s in display_segments
+                                    if isinstance(s['distance_km'], (float, int))
+                                )
+                                display_total_time = sum(
+                                    s['time_minutes'] for s in display_segments
+                                    if isinstance(s['time_minutes'], (float, int))
+                                )
+                                display_num_transfers = max(len(display_segments) - 1, 0)
+
                                 results.append({
                                     'route_type': 'transfer',
-                                    'transfer_details': transfer_details,
-                                    'total_distance_km': round(total_distance, 2) if total_distance > 0 else 'N/A',
-                                    'total_time_minutes': round(total_time, 0) if total_time > 0 else 'N/A',
-                                    'num_transfers': num_transfers,
+                                    'transfer_details': display_segments,
+                                    'total_distance_km': round(display_total_distance, 2) if display_total_distance > 0 else 'N/A',
+                                    'total_time_minutes': round(display_total_time, 0) if display_total_time > 0 else 'N/A',
+                                    'num_transfers': display_num_transfers,
                                 })
                             else:
                                 error_message = "No valid transfer route could be constructed."
@@ -1303,9 +1320,42 @@ def get_complaint_numbers_api(request, line_number):
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
             'Golden Yangon City Transportation Public Co.,Ltd (GYCT)': ['09 443144471', '09 428045840', '09 683011360']
         },
-        'YBS 11': {
+        'YBS 2': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
             'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 12': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Bandoola Transport Public Co.,Ltd(BDL)': ['09 73023290', '09 773027939', '09 26289646']
+        },
+        'YBS 13': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Bandoola Transport Public Co.,Ltd(BDL)': ['09 73023290', '09 773027939', '09 26289646']
+        },
+        'YBS 16': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Golden Yangon City Transportation Public Co.,Ltd (GYCT)': ['09 443144471', '09 428045840', '09 683011360']
+        },
+        'YBS 7': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 20': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Omni Focus General Service Public Co.,Ltd (OMNI FOCUS)': ['09 43197277', '09 401756638', '09 788888945']
+        },
+        'YBS 21': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Power Eleven Public Co.,Ltd (POWER ELEVEN)': ['09 5062382', '09 456060069', '09 456060096',
+                                                           '09 466060099']        },
+        'YBS 22': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Transport Star Public Co.,Ltd(TRANSPORT STAR)': ['09 5065370', '09 43159893', '09 693504061']
+        },
+
+        'YBS 23': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Sunwai La Public Co.,Ltd (SANWAI LA)': ['09 740999102', '09 896092989', '09 796611335']
         },
         'YBS 66': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
@@ -1330,9 +1380,90 @@ def get_complaint_numbers_api(request, line_number):
         },
         'YBS 131': {
             'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
-            'Powe Eleven Public Co.,Ltd (POWER ELEVEN)': ['09 5062382', '09 456060069', '09 456060096',
+            'Power Eleven Public Co.,Ltd (POWER ELEVEN)': ['09 5062382', '09 456060069', '09 456060096',
                                                             '09 466060099']
         },
+        'YBS 38': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Bandoola Transport Public Co.,Ltd (BDL)': ['09 73023290', '09 773027939', '09 26289646']
+        },
+        'YBS 35': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Khit Thit Bayint Naung Public Co.,Ltd (KTB)': ['09 43098386', '09 972074499', '09 455798875',
+                                                            '09 795521586']        },
+        'YBS 37': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Bus Public Co.,Ltd (YBPC)': ['09 750943026', '09 451611891', '09 795545458']
+        },
+        'YBS 72': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Bus Public Co.,Ltd (YBPC)': ['09 750943026', '09 451611891', '09 795545458']
+        },
+        'YBS 74': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Rapid City Bus Public Co.,Ltd (RCBT)': ['09 5094551', '09 459777784', '09 250686431']
+        },
+        'YBS 77': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Rapid City Bus Public Co.,Ltd (RCBT)': ['09 5094551', '09 459777784', '09 250686431']
+        },
+        'YBS 81': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Trans Link Public Co.,Ltd (TLPC)': ['09 5062832', '09 456060069', '09 97860563']
+        },
+        'YBS 75': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Khit Thit Bayint Naung Public Co.,Ltd (KTB)': ['09 43098386', '09 972074499', '09 455798875',
+                                                            '09 795521586']},
+        'YBS 107': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Bus Public Co.,Ltd (YBPC)': ['09 750943026', '09 451611891', '09 795545458']
+        },
+        'YBS 104': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Bus Public Co.,Ltd (YBPC)': ['09 750943026', '09 451611891', '09 795545458']
+        },
+        'YBS 56': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Omni Focus General Service Public Co.,Ltd (OMNI FOCUS)': ['09 43197277', '09 401756638', '09 788888945']
+        },
+        'YBS 57': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Golden Yangon City Transportation Public Co.,Ltd (GYTC)': ['09 443144471', '09 428045840', '09 683011360']
+        },
+        'YBS 58': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 140': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Omni Focus General Service Public Co.,Ltd (OMNI FOCUS)': ['09 43197277', '09 401756638', '09 788888945']
+        },
+        'YBS 55': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Bandoola Transport Public Co.,Ltd (BDL)': ['09 73023290', '09 773027939', '09 26289646']
+        },
+        'YBS 130': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Sanwai La Co.,Ltd (SANWAI LA)': ['09 740999102', '09 794887118', '09 896092989']
+        },
+        'YBS 111': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 112': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 113': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Yangon Urban Public Transportation Public Co.,Ltd (YUPT)': ['09 454546655', '09 964546655', '09-5119579']
+        },
+        'YBS 120': {
+            'Yangon Region Transport Committee (YRTC)': ['09 448147149', '09 448147153', '09 448147154'],
+            'Trans Link Public Co.,Ltd (TLPC)': ['09 5062832', '09 456060069', '09 97860563']
+        },
+
     }
 
     numbers = complaint_data.get(line_number, {})
@@ -1345,7 +1476,7 @@ def bus_lines_api(request):
     This function is used by the frontend to dynamically load the bus line data.
     """
     try:
-        bus_lines = BusLine.objects.all()
+        bus_lines = BusLine.objects.all().order_by('line_number')
         data = []
         for bus in bus_lines:
             data.append({
@@ -1355,6 +1486,62 @@ def bus_lines_api(request):
         return JsonResponse(data, safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@login_required
+def update_user_location(request):
+    """API endpoint to update user's location"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            latitude = data.get('latitude')
+            longitude = data.get('longitude')
+            accuracy = data.get('accuracy')
+            is_sharing = data.get('is_sharing', True)
+            
+            # Get or create user location object
+            user_location, created = UserLocation.objects.get_or_create(
+                user=request.user,
+                defaults={
+                    'latitude': latitude,
+                    'longitude': longitude,
+                    'accuracy': accuracy,
+                    'is_sharing': is_sharing
+                }
+            )
+            
+            # Update if it already exists
+            if not created:
+                user_location.latitude = latitude
+                user_location.longitude = longitude
+                user_location.accuracy = accuracy
+                user_location.is_sharing = is_sharing
+                user_location.save()
+                
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
+
+@login_required
+def get_user_location(request):
+    """API endpoint to get user's current location"""
+    try:
+        user_location = UserLocation.objects.filter(user=request.user).first()
+        if user_location and user_location.is_sharing:
+            return JsonResponse({
+                'status': 'success',
+                'latitude': float(user_location.latitude),
+                'longitude': float(user_location.longitude),
+                'accuracy': float(user_location.accuracy) if user_location.accuracy else None,
+                'timestamp': user_location.timestamp.isoformat(),
+                'is_sharing': user_location.is_sharing
+            })
+        return JsonResponse({'status': 'not_found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
 def bus_stops_api(request):
@@ -1369,6 +1556,36 @@ def bus_stops_api(request):
 @login_required(login_url='login')
 def all_bus_lines_view(request):
     return render(request, 'all_bus_lines.html')
+
+@login_required
+def profile_view(request):
+    """
+    User profile page: shows username and email (password masked) and allows changing password.
+    """
+    password_form = CustomPasswordChangeForm(user=request.user)
+
+    if request.method == 'POST':
+        password_form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+        if password_form.is_valid():
+            user = password_form.save()
+            update_session_auth_hash(request, user)  # Keep user logged in after change
+            messages.success(request, 'Your password has been updated successfully.')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+
+    # Optional: fetch additional profile info if present
+    user_profile = None
+    try:
+        user_profile = request.user.profile
+    except Exception:
+        user_profile = None
+
+    return render(request, 'profile.html', {
+        'user_obj': request.user,
+        'user_profile': user_profile,
+        'password_form': password_form,
+    })
 
 def complaints_view(request):
     """

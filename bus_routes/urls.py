@@ -53,5 +53,8 @@ urlpatterns = [
     path('admin-dashboard/users/edit/<int:user_id>/', views.admin_user_edit, name='admin_user_edit'),
     path('admin-dashboard/users/delete/<int:user_id>/', views.admin_user_delete, name='admin_user_delete'),
     path('api/complaint_numbers/<str:line_number>/', views.get_complaint_numbers_api, name='api_complaint_numbers'),
+    # User Profile URLs
+    path('profile/', views.profile_view, name='profile'),
+    # User location tracking API endpoints
 
 ]

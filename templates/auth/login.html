@@ -21,53 +21,67 @@
             color: #f1f5f9; /* Light text for contrast */
         }
 
-        /* Custom form card colors - This will NOT change in dark mode */
+        /* Custom form card colors with gradient */
         .form-card {
-            background-color: #1e293b; /* Consistent deep slate color */
-            color: #e2e8f0; /* Light text for contrast */
+            background: linear-gradient(135deg, #2a4365 0%, #1e293b 100%);
+            color: #e2e8f0;
             transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* We remove the dark mode specific styling for .form-card here
-           so it stays a consistent dark color regardless of the theme. */
-
-        /* Input field styling */
+        /* Input field styling with improved aesthetics */
         .form-input {
             width: 100%;
             padding: 0.75rem;
             border-radius: 0.5rem;
-            border: 1px solid #475569; /* slate-600 */
-            background-color: #475569; /* slate-600 */
-            color: #e2e8f0; /* Light text */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
             transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
         }
 
         .form-input:focus {
             outline: none;
-            border-color: #64748b; /* slate-500 */
-            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.5);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            background-color: rgba(255, 255, 255, 0.15);
         }
 
         /* Styling for the Django form fields */
         #id_username, #id_password {
             @apply form-input;
         }
+        
+        /* Add animation for form elements */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-card > * {
+            animation: fadeIn 0.5s ease forwards;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center py-8">
     <div class="container mx-auto px-4 w-full max-w-md">
-        <!-- The main form card with its consistent dark color -->
-        <div class="form-card rounded-xl shadow-md p-6 mb-8 relative">
-
-            <div class="flex items-center justify-between mb-6">
-                <!-- Text colors inside the form are now consistent for better contrast -->
-                <a href="{% url 'home' %}" class="text-gray-300 hover:text-gray-100 transition-colors duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- The main form card with improved styling -->
+        <div class="form-card rounded-xl shadow-md p-8 mb-8 relative backdrop-blur-sm">
+            <!-- Centered title -->
+            <div class="flex justify-center mb-6">
+                <h1 class="text-3xl font-bold text-center text-white">Login</h1>
+            </div>
+            
+            <!-- Back button -->
+            <div class="flex mb-6">
+                <a href="{% url 'home' %}" class="text-gray-300 hover:text-white transition-colors duration-300 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
+                    <span>Home</span>
                 </a>
-                <h1 class="text-2xl font-bold text-center text-gray-100">Login</h1>
-                <div></div> <!-- Placeholder for symmetry -->
             </div>
 
             {% if messages %}
@@ -80,24 +94,37 @@
 
             <form method="post" class="space-y-6">
                 {% csrf_token %}
-                <div>
-                    <!-- Consistent label text color -->
-                    <label for="id_username" class="block text-gray-300 text-sm font-medium mb-2">Username</label>
-                    {{ form.username }}
+                <div class="relative">
+                    <label for="id_username" class="block text-blue-300 text-sm font-medium mb-2">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div class="pl-10">{{ form.username }}</div>
+                    </div>
                     {% if form.username.errors %}
                         <p class="text-red-400 text-xs mt-1">{{ form.username.errors.0 }}</p>
                     {% endif %}
                 </div>
-                <div>
-                    <!-- Consistent label text color -->
-                    <label for="id_password" class="block text-gray-300 text-sm font-medium mb-2">Password</label>
-                    {{ form.password }}
+                <div class="relative">
+                    <label for="id_password" class="block text-blue-300 text-sm font-medium mb-2">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                        <div class="pl-10">{{ form.password }}</div>
+                    </div>
                     {% if form.password.errors %}
                         <p class="text-red-400 text-xs mt-1">{{ form.password.errors.0 }}</p>
                     {% endif %}
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg
-                               hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-lg
+                               hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                               transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg
                                transition-all duration-300 transform hover:scale-105 shadow-lg">
                     Login
                 </button>
