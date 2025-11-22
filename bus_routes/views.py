@@ -149,6 +149,9 @@ def save_route(request):
         start_stop_id = request.GET.get('start_stop_id')
         end_stop_id = request.GET.get('end_stop_id')
         bus_line_number = request.GET.get('bus_line_number')
+        # Also accept names from query for compatibility
+        start_stop_name = request.GET.get('start_stop')
+        end_stop_name = request.GET.get('end_stop')
 
         initial_data = {}
         if start_stop_id:
@@ -156,12 +159,20 @@ def save_route(request):
                 initial_data['start_stop'] = BusStop.objects.get(id=start_stop_id)
             except BusStop.DoesNotExist:
                 pass
+        elif start_stop_name:
+            obj = get_bus_stop_object(start_stop_name)
+            if obj:
+                initial_data['start_stop'] = obj
 
         if end_stop_id:
             try:
                 initial_data['end_stop'] = BusStop.objects.get(id=end_stop_id)
             except BusStop.DoesNotExist:
                 pass
+        elif end_stop_name:
+            obj = get_bus_stop_object(end_stop_name)
+            if obj:
+                initial_data['end_stop'] = obj
 
         if bus_line_number:
             initial_data['line_number'] = bus_line_number

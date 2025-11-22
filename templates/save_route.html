@@ -61,27 +61,31 @@
                     {% endif %}
                 </div>
                 <div>
+                    <!-- Replace the Start Stop dropdown with hidden input + read-only display -->
                     <label for="id_start_stop" class="block text-gray-700 text-sm font-medium mb-2">Start Stop</label>
-                    <select name="start_stop" id="id_start_stop" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
-                        {% for stop in form.fields.start_stop.queryset %}
-                            <option value="{{ stop.id }}" {% if form.initial.start_stop and form.initial.start_stop.id == stop.id %}selected{% endif %}>
-                                {{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}
-                            </option>
-                        {% endfor %}
-                    </select>
+                    <input type="hidden" name="start_stop" id="id_start_stop" value="{{ form.initial.start_stop.id|default:'' }}">
+                    <div class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                        {% if form.initial.start_stop %}
+                            {{ form.initial.start_stop.name_en }}{% if form.initial.start_stop.road_name_en %} ({{ form.initial.start_stop.road_name_en }}){% endif %}
+                        {% else %}
+                            No start stop preset
+                        {% endif %}
+                    </div>
                     {% if form.start_stop.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ form.start_stop.errors.0 }}</p>
                     {% endif %}
                 </div>
                 <div>
+                    <!-- Replace the End Stop dropdown with hidden input + read-only display -->
                     <label for="id_end_stop" class="block text-gray-700 text-sm font-medium mb-2">End Stop</label>
-                    <select name="end_stop" id="id_end_stop" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
-                        {% for stop in form.fields.end_stop.queryset %}
-                            <option value="{{ stop.id }}" {% if form.initial.end_stop and form.initial.end_stop.id == stop.id %}selected{% endif %}>
-                                {{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}
-                            </option>
-                        {% endfor %}
-                    </select>
+                    <input type="hidden" name="end_stop" id="id_end_stop" value="{{ form.initial.end_stop.id|default:'' }}">
+                    <div class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                        {% if form.initial.end_stop %}
+                            {{ form.initial.end_stop.name_en }}{% if form.initial.end_stop.road_name_en %} ({{ form.initial.end_stop.road_name_en }}){% endif %}
+                        {% else %}
+                            No end stop preset
+                        {% endif %}
+                    </div>
                     {% if form.end_stop.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ form.end_stop.errors.0 }}</p>
                     {% endif %}
