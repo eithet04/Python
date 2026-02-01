@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YBS Route Finder</title>
@@ -131,16 +133,19 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center py-8">
+<body class="min-h-screen flex flex-col items-center py-8 px-4 sm:px-6 md:px-8">
 
 
-    <header class="header w-full shadow-md p-4 mb-6 flex flex-col md:flex-row justify-between items-center px-8">
+
+    <header class="w-full flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+
         <div class="flex items-center mb-4 md:mb-0">
             <h1 class="text-2xl font-bold text-blue-600 dark-theme:text-blue-400">YBS Route Finder</h1>
         </div>
 
 
-        <nav class="flex-grow flex justify-center space-x-4 mb-4 md:mb-0">
+        <nav class="flex flex-col sm:flex-row justify-center sm:space-x-4 space-y-2 sm:space-y-0 w-full">
+
             {% if user.is_authenticated %}
                 <a href="{% url 'all_bus_lines' %}" class="px-6 py-3 bg-blue-200 text-blue-800 rounded-lg hover:bg-blue-300 dark-theme:bg-blue-800 dark-theme:text-blue-200 dark-theme:hover:bg-blue-700 transition-all duration-200 text-base font-medium">
                     All Bus Lines
@@ -192,7 +197,7 @@
         </div>
     </header>
 
-    <div class="container mx-auto px-4 w-full max-w-4xl">
+    <div class="container mx-auto px-4 w-full max-w-4xl" style="padding-top: 50px;">
         <main class="w-full">
             {% if messages %}
                 {% for message in messages %}
@@ -213,55 +218,67 @@
 
                 {% if user.is_authenticated %}
                     {# -- Search Buttons -- #}
-                    <div class="flex justify-center mb-6 search-buttons-container">
-                        <button id="busStopSearchBtn" class="px-8 py-4 rounded-l-full sm:rounded-r-none font-semibold text-lg transition-all duration-300
-                                                                bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
-                            Bus Stop Search
-                        </button>
-                        <button id="busLineSearchBtn" class="px-8 py-4 font-semibold text-lg transition-all duration-300
-                                                                bg-secondary text-main-color hover:bg-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 dark-theme:bg-slate-700 dark-theme:text-slate-300 dark-theme:hover:bg-slate-600">
-                            Bus Line Search
-                        </button>
-                        <button id="busesByStopSearchBtn" class="px-8 py-4 rounded-r-full sm:rounded-l-none font-semibold text-lg transition-all duration-300
-                                                                    bg-secondary text-main-color hover:bg-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 dark-theme:bg-slate-700 dark-theme:text-slate-300 dark-theme:hover:bg-slate-600">
-                            Buses By Stop
-                        </button>
-                    </div>
+                    <div class="flex flex-col sm:flex-row justify-center mb-6 space-y-2 sm:space-y-0 sm:space-x-2 search-buttons-container w-full max-w-full px-2 sm:px-0">
+    <button id="busStopSearchBtn" 
+            class="w-full sm:w-auto px-6 py-4 rounded-full sm:rounded-l-full sm:rounded-r-none font-semibold text-lg transition-all duration-300
+                   bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
+        Bus Stop Search
+    </button>
+    <button id="busLineSearchBtn" 
+            class="w-full sm:w-auto px-6 py-4 font-semibold text-lg transition-all duration-300
+                   bg-secondary text-main-color hover:bg-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 dark-theme:bg-slate-700 dark-theme:text-slate-300 dark-theme:hover:bg-slate-600">
+        Bus Line Search
+    </button>
+    <button id="busesByStopSearchBtn" 
+            class="w-full sm:w-auto px-6 py-4 rounded-full sm:rounded-l-none sm:rounded-r-full font-semibold text-lg transition-all duration-300
+                   bg-secondary text-main-color hover:bg-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 dark-theme:bg-slate-700 dark-theme:text-slate-300 dark-theme:hover:bg-slate-600">
+        Buses By Stop
+    </button>
+</div>
 
 
-                    <form id="busStopForm" action="{% url 'search_route' %}" method="GET" class="space-y-6">
-                        <input type="hidden" name="search_type" value="bus_stop">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="start_stop" class="block text-main-color text-sm font-medium mb-2">Start Bus Stop</label>
-                                <select id="start_stop" name="start_stop" 
-                                    class="w-full px-4 py-3 border border-primary rounded-lg bg-white placeholder-color text-main-color dark-theme:bg-slate-900 dark-theme:text-white dark-theme:border-slate-700 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 input-field shadow-sm"
-                                    required>
-                                    <option value="">-- Select Start Bus Stop --</option>
-                                    {% for stop in bus_stops %}
-                                        <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}{% if stop.name_mm %} - {{ stop.name_mm }}{% endif %}{% if stop.road_name_mm %} ({{ stop.road_name_mm }}){% endif %}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div>
-                                <label for="end_stop" class="block text-main-color text-sm font-medium mb-2">End Bus Stop</label>
-                                <select id="end_stop" name="end_stop" 
-                                    class="w-full px-4 py-3 border border-primary rounded-lg bg-white placeholder-color text-main-color dark-theme:bg-slate-900 dark-theme:text-white dark-theme:border-slate-700 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 input-field shadow-sm"
-                                    required>
-                                    <option value="">-- Select End Bus Stop --</option>
-                                    {% for stop in bus_stops %}
-                                        <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}{% if stop.name_mm %} - {{ stop.name_mm }}{% endif %}{% if stop.road_name_mm %} ({{ stop.road_name_mm }}){% endif %}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit"
-                                class="w-full bg-blue-600 text-white font-bold py-4 px-8 rounded-lg
-                                    hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50
-                                    transition-all duration-300 transform hover:scale-105 shadow-lg search-button">
-                            Find Routes
-                        </button>
-                    </form>
+
+                  <form id="busStopForm" action="{% url 'search_route' %}" method="GET"
+      class="space-y-6 w-full max-w-3xl mx-auto px-2 sm:px-4 md:px-0">
+    <input type="hidden" name="search_type" value="bus_stop">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Start Bus Stop -->
+        <div class="w-full">
+            <label for="start_stop" class="block text-main-color text-sm font-medium mb-2">Start Bus Stop</label>
+            <select id="start_stop" name="start_stop" required>
+                <option value="">-- Select Start Bus Stop --</option>
+                {% for stop in bus_stops %}
+                    <option value="{{ stop.name_en }}">
+                        {{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}{% if stop.name_mm %} - {{ stop.name_mm }}{% endif %}{% if stop.road_name_mm %} ({{ stop.road_name_mm }}){% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- End Bus Stop -->
+        <div class="w-full">
+            <label for="end_stop" class="block text-main-color text-sm font-medium mb-2">End Bus Stop</label>
+            <select id="end_stop" name="end_stop" required>
+                <option value="">-- Select End Bus Stop --</option>
+                {% for stop in bus_stops %}
+                    <option value="{{ stop.name_en }}">
+                        {{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}{% if stop.name_mm %} - {{ stop.name_mm }}{% endif %}{% if stop.road_name_mm %} ({{ stop.road_name_mm }}){% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit"
+            class="w-full bg-blue-600 text-white font-bold py-4 px-8 rounded-lg
+                   hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50
+                   transition-all duration-300 transform hover:scale-105 shadow-lg">
+        Find Routes
+    </button>
+</form>
+
 
 
                     <form id="busLineForm" action="{% url 'search_route' %}" method="GET" class="space-y-6 hidden">
@@ -281,26 +298,29 @@
                     </form>
 
 
-                    <form id="busesByStopForm" action="{% url 'search_route' %}" method="GET" class="space-y-6 hidden">
-                        <input type="hidden" name="search_type" value="buses_by_stop">
-                        <div>
-                            <label for="single_bus_stop" class="block text-main-color text-sm font-medium mb-2">Search Buses by Stop Name</label>
-                            <select id="single_bus_stop" name="single_bus_stop" 
-                                class="w-full px-4 py-3 border border-primary rounded-lg bg-white placeholder-color text-main-color dark-theme:bg-slate-900 dark-theme:text-white dark-theme:border-slate-700 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 input-field shadow-sm"
-                                required>
-                                <option value="">-- Select Bus Stop --</option>
-                                {% for stop in bus_stops %}
-                                    <option value="{{ stop.name_en }}">{{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}{% if stop.name_mm %} - {{ stop.name_mm }}{% endif %}{% if stop.road_name_mm %} ({{ stop.road_name_mm }}){% endif %}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <button type="submit"
-                                class="w-full bg-blue-600 text-white font-bold py-4 px-8 rounded-lg
-                                    hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50
-                                    transition-all duration-300 transform hover:scale-105 shadow-lg search-button">
-                            Find Buses for Stop
-                        </button>
-                    </form>
+                   <form id="busesByStopForm" action="{% url 'search_route' %}" method="GET" 
+      class="space-y-6 hidden w-full max-w-3xl mx-auto px-2 sm:px-4 md:px-0">
+    <input type="hidden" name="search_type" value="buses_by_stop">
+
+    <div class="w-full">
+        <label for="single_bus_stop" class="block text-main-color text-sm font-medium mb-2">Search Buses by Stop Name</label>
+        <select id="single_bus_stop" name="single_bus_stop" required>
+            <option value="">-- Select Bus Stop --</option>
+            {% for stop in bus_stops %}
+                <option value="{{ stop.name_en }}">
+                    {{ stop.name_en }}{% if stop.road_name_en %} ({{ stop.road_name_en }}){% endif %}{% if stop.name_mm %} - {{ stop.name_mm }}{% endif %}{% if stop.road_name_mm %} ({{ stop.road_name_mm }}){% endif %}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="submit"
+            class="w-full bg-blue-600 text-white font-bold py-4 px-8 rounded-lg
+                   hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50
+                   transition-all duration-300 transform hover:scale-105 shadow-lg search-button">
+        Find Buses for Stop
+    </button>
+</form>
                 {% else %}
 
                     <div class="bg-secondary text-center py-12 rounded-xl shadow-sm dark-theme:bg-slate-900">
@@ -362,7 +382,46 @@
 
 <!-- Add this right before the closing </body> tag -->
 <script>
-    // User location tracking functionality
+
+    // for search stops
+   document.addEventListener('DOMContentLoaded', function () {
+    // Initialize Choices.js
+    const startStopChoices = new Choices('#start_stop', {
+        searchEnabled: true,
+        itemSelectText: '',
+        shouldSort: false,
+        position: 'bottom',
+        placeholder: true,
+        placeholderValue: '-- Select Start Bus Stop --',
+        searchPlaceholderValue: 'Type to search...'
+    });
+
+    const endStopChoices = new Choices('#end_stop', {
+        searchEnabled: true,
+        itemSelectText: '',
+        shouldSort: false,
+        position: 'bottom',
+        placeholder: true,
+        placeholderValue: '-- Select End Bus Stop --',
+        searchPlaceholderValue: 'Type to search...'
+    });
+});
+    // for buses by stop
+    document.addEventListener('DOMContentLoaded', function () {
+    // Initialize Choices.js for this form
+    const singleStopChoices = new Choices('#single_bus_stop', {
+        searchEnabled: true,
+        itemSelectText: '',
+        shouldSort: false,
+        position: 'bottom',
+        placeholder: true,
+        placeholderValue: '-- Select Bus Stop --',
+        searchPlaceholderValue: 'Type to search...'
+    });
+});
+
+
+// User location tracking functionality
     let watchId = null;
     let userMarker = null;
     let userAccuracyCircle = null;

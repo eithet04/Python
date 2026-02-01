@@ -76,9 +76,9 @@
             padding: 24px; /* Increased padding */
             border-radius: 1rem; /* Slightly more rounded corners */
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            width: 90%;
-            max-width: 600px; /* Increased max-width */
-            position: relative;
+            width: 95%;
+            max-width: 600px; 
+            padding: 1.5rem; /
         }
         .modal-content.dark-theme {
             background-color: #1e293b; /* slate-800 */
@@ -137,7 +137,8 @@
         </div>
 
         {# -- Navigation Buttons -- #}
-        <nav class="flex-grow flex justify-center space-x-4 mb-4 md:mb-0">
+        <nav class="flex flex-col md:flex-row md:justify-center space-y-2 md:space-y-0 md:space-x-4 mb-4 md:mb-0">
+
             {% if user.is_authenticated %}
                 <a href="{% url 'all_bus_lines' %}" class="px-6 py-3 bg-blue-200 text-blue-800 rounded-lg hover:bg-blue-300 dark-theme:bg-blue-800 dark-theme:text-blue-200 dark-theme:hover:bg-blue-700 transition-all duration-200 text-base font-medium">
                     All Bus Lines
@@ -186,8 +187,10 @@
         </div>
     </header>
 
-    <div class="container mx-auto px-4 w-full max-w-2xl flex-grow">
-        <h2 class="text-4xl font-bold text-center text-main-color my-8">YBS Bus လိုင်းများ</h2>
+    <div class="container mx-auto px-2 sm:px-4 md:px-8 w-full max-w-full sm:max-w-2xl flex-grow">
+
+        <h2 class="text-3xl sm:text-4xl font-bold text-center text-main-color my-6 sm:my-8">
+YBS Bus လိုင်းများ</h2>
         <p class="text-center text-secondary-color mb-6">တိုင်ကြားလိုသော YBS Bus လိုင်းကို ရွေးချယ်ပါ</p>
 
         {# -- Display Django Messages here -- #}
@@ -203,7 +206,7 @@
 
         <div id="bus-lines-list" class="space-y-4">
             {% for line in bus_lines %}
-                <div class="card p-6 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark-theme:hover:bg-slate-700 transition-colors duration-200"
+                <div class="card p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center cursor-pointer hover:bg-gray-50 dark-theme:hover:bg-slate-700 transition-colors duration-200" data-line-number="YBS {{ line.line_number }}">
                      data-line-number="YBS {{ line.line_number }}">
                     <span class="text-xl font-semibold text-main-color">YBS {{ line.line_number }}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

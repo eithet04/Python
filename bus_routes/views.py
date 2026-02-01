@@ -73,7 +73,6 @@ def home(request):
         'saved_routes': saved_routes
     })
 
-
 def register_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -82,52 +81,47 @@ def register_view(request):
             email = form.cleaned_data.get('email')
             password = form.cleaned_data.get('password2')
 
-            # Check if password has at least 8 characters and contains at least one digit
+            # Password check
             if len(password) < 8 or not any(char.isdigit() for char in password):
                 messages.error(request, 'Password must be at least 8 characters long and contain at least one digit.')
                 return render(request, 'auth/register.html', {'form': form})
 
-            # Check if a user with this username already exists
+            # Unique username/email
             if User.objects.filter(username=username).exists():
-                messages.error(request, 'This username is already taken. Please choose another one.')
+                messages.error(request, 'This username is already taken.')
                 return render(request, 'auth/register.html', {'form': form})
-
-            # Check if a user with this email already exists
             if User.objects.filter(email=email).exists():
-                messages.error(request, 'This email is already registered. Please use a different one.')
+                messages.error(request, 'This email is already registered.')
                 return render(request, 'auth/register.html', {'form': form})
 
+            # Create user and log in
             user = User.objects.create_user(username=username, email=email, password=password)
-            user.save()
-
             login(request, user)
-            messages.success(request, 'Registration successful!')
+            messages.success(request, f'Welcome, {username}! Your account was created.')
             return redirect('home')
+        else:
+            # Show Django form errors (like password mismatch)
+            messages.error(request, 'Please fix the errors below.')
     else:
         form = CustomUserCreationForm()
 
     return render(request, 'auth/register.html', {'form': form})
 
-
 def login_view(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, f'Welcome back, {username}!')
-                next_page = request.GET.get('next', 'home')
-                return redirect(next_page)
-            else:
-                messages.error(request, 'Invalid username or password.')
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, f'Welcome back, {user.username}!')
+            next_page = request.POST.get('next') or request.GET.get('next') or 'home'
+            return redirect(next_page)
+        else:
+            messages.error(request, 'Invalid username or password.')
     else:
         form = CustomAuthenticationForm()
 
     return render(request, 'auth/login.html', {'form': form})
-
 
 def logout_view(request):
     logout(request)

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Profile</title>
     {% load static %}
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,20 +14,11 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
         }
-        .profile-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .input-field {
-            background-color: rgba(243, 244, 246, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(209, 213, 219, 0.5);
-            transition: all 0.2s ease;
-        }
-        .input-field:focus {
-            background-color: rgba(255, 255, 255, 0.9);
-            border-color: rgba(30, 58, 138, 0.5);
-            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.25);
+        @media (min-width: 768px) {
+            .profile-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
         }
         .gradient-button {
             background: linear-gradient(to right, #1e40af, #1e3a8a);
@@ -35,6 +27,9 @@
         .gradient-button:hover {
             background: linear-gradient(to right, #1e3a8a, #172554);
             transform: scale(1.02);
+        }
+        .gradient-button:active {
+            transform: scale(0.98);
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -59,151 +54,138 @@
             opacity: 0.8;
             z-index: 0;
         }
+        /* Mobile-specific form styling */
+        input[type="password"] {
+            width: 100%;
+            padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        @media (max-width: 640px) {
+            input[type="password"] {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-100 to-blue-100 text-slate-900">
-<header class="header w-full shadow-md p-4 mb-8 flex justify-between items-center px-8 bg-white">
-    <h1 class="text-2xl font-bold text-blue-900">YBS Route Finder</h1>
-    <div class="flex items-center space-x-3">
-        <a href="{% url 'home' %}" class="px-6 py-2 bg-blue-100 text-blue-900 rounded-lg hover:bg-blue-200 transition-all duration-200">
-            <i class="fas fa-home mr-2"></i>Home
+<header class="w-full shadow-md p-3 sm:p-4 mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-center px-4 sm:px-8 bg-white">
+    <h1 class="text-xl sm:text-2xl font-bold text-blue-900 mb-3 sm:mb-0">YBS Route Finder</h1>
+    <div class="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto justify-center sm:justify-end">
+        <a href="{% url 'home' %}" class="px-3 sm:px-4 py-2 bg-blue-100 text-blue-900 rounded-lg hover:bg-blue-200 transition-all duration-200 text-sm sm:text-base">
+            <i class="fas fa-home mr-1 sm:mr-2"></i><span class="hidden xs:inline">Home</span>
         </a>
-        <a href="{% url 'logout' %}" class="px-6 py-2 bg-red-700 text-white rounded-lg hover:bg-blue-800 transition-all duration-200">
-            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+        <a href="{% url 'logout' %}" class="px-3 sm:px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-all duration-200 text-sm sm:text-base">
+            <i class="fas fa-sign-out-alt mr-1 sm:mr-2"></i><span class="hidden xs:inline">Logout</span>
         </a>
     </div>
 </header>
 
-<div class="container mx-auto px-4 w-full max-w-4xl">
-    {% if messages %}
-        <div class="mb-6 animate-fade-in">
-            {% for message in messages %}
-                <div class="p-4 rounded-lg bg-blue-100 text-blue-900 mb-2 border-l-4 border-blue-700 flex items-center">
-                    <i class="fas fa-info-circle mr-3 text-blue-700"></i>
-                    <span>{{ message }}</span>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+<div class="mx-auto px-4 sm:px-6 md:px-8 w-full max-w-7xl">
 
-    <h1 class="text-3xl font-bold text-center mb-8 text-blue-900">Your Profile</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-blue-900 px-4">Your Profile</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <section class="profile-card rounded-xl overflow-hidden animate-fade-in" style="animation-delay: 0.1s;">
-            <div class="profile-header p-5">
+    <!-- GRID: 1 column mobile, 2 columns desktop -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 w-full">
+
+        <!-- Account Info Card -->
+        <section class="profile-card w-full rounded-xl overflow-hidden animate-fade-in">
+            <div class="profile-header p-4 sm:p-5">
                 <div class="relative z-10 flex items-center">
-                    <div class="bg-white p-3 rounded-full mr-4 shadow-md">
-                        <i class="fas fa-user text-2xl text-blue-800"></i>
+                    <div class="bg-white p-2 sm:p-3 rounded-full mr-3 sm:mr-4 shadow-md">
+                        <i class="fas fa-user text-xl sm:text-2xl text-blue-800"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-white">Account Information</h2>
+                    <h2 class="text-lg sm:text-xl font-bold text-white">Account Information</h2>
                 </div>
             </div>
-            <div class="p-6 space-y-4">
-                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
-                    <i class="fas fa-user-circle text-blue-700 mr-3 text-xl"></i>
-                    <div>
-                        <p class="text-sm text-blue-800 font-medium">Username</p>
-                        <p class="font-semibold text-slate-800">{{ user_obj.username }}</p>
+            <div class="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                <div class="flex items-center p-3 sm:p-4 bg-blue-50 rounded-lg">
+                    <i class="fas fa-user-circle text-blue-700 mr-3 text-lg sm:text-xl flex-shrink-0"></i>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm text-blue-800 font-medium">Username</p>
+                        <p class="font-semibold text-slate-800 text-sm sm:text-base truncate">{{ user_obj.username }}</p>
                     </div>
                 </div>
-                
-                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
-                    <i class="fas fa-envelope text-blue-700 mr-3 text-xl"></i>
-                    <div>
-                        <p class="text-sm text-blue-800 font-medium">Email</p>
-                        <p class="font-semibold text-slate-800">{{ user_obj.email }}</p>
+                <div class="flex items-center p-3 sm:p-4 bg-blue-50 rounded-lg">
+                    <i class="fas fa-envelope text-blue-700 mr-3 text-lg sm:text-xl flex-shrink-0"></i>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm text-blue-800 font-medium">Email</p>
+                        <p class="font-semibold text-slate-800 text-sm sm:text-base truncate">{{ user_obj.email }}</p>
                     </div>
                 </div>
-                
-                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
-                    <i class="fas fa-key text-blue-700 mr-3 text-xl"></i>
-                    <div>
-                        <p class="text-sm text-blue-800 font-medium">Password</p>
-                        <p class="font-semibold text-slate-800">•••••••• <span class="text-sm text-slate-500">(hidden for security)</span></p>
+                <div class="flex items-center p-3 sm:p-4 bg-blue-50 rounded-lg">
+                    <i class="fas fa-key text-blue-700 mr-3 text-lg sm:text-xl flex-shrink-0"></i>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm text-blue-800 font-medium">Password</p>
+                        <p class="font-semibold text-slate-800 text-sm sm:text-base">•••••••• <span class="text-xs sm:text-sm text-slate-500">(hidden)</span></p>
                     </div>
                 </div>
             </div>
-            <!-- Phone number and preferred language fields removed -->
         </section>
 
-        <section class="profile-card rounded-xl overflow-hidden animate-fade-in" style="animation-delay: 0.2s;">
-            <div class="profile-header p-5">
+        <!-- Change Password Card -->
+        <section class="profile-card w-full rounded-xl overflow-hidden animate-fade-in">
+            <div class="profile-header p-4 sm:p-5">
                 <div class="relative z-10 flex items-center">
-                    <div class="bg-white p-3 rounded-full mr-4 shadow-md">
-                        <i class="fas fa-lock text-2xl text-blue-800"></i>
+                    <div class="bg-white p-2 sm:p-3 rounded-full mr-3 sm:mr-4 shadow-md">
+                        <i class="fas fa-lock text-xl sm:text-2xl text-blue-800"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-white">Change Password</h2>
+                    <h2 class="text-lg sm:text-xl font-bold text-white">Change Password</h2>
                 </div>
             </div>
-            <div class="p-6">
-                <form method="post" class="space-y-4">
+            <div class="p-4 sm:p-6">
+                <form method="post" class="space-y-4 sm:space-y-5">
                     {% csrf_token %}
                     <div>
                         <label for="id_old_password" class="block text-sm font-medium text-slate-700 mb-2 flex items-center">
                             <i class="fas fa-unlock-alt mr-2 text-blue-700"></i>Current Password
                         </label>
-                        <div class="relative">
+                        <div class="relative w-full">
                             {{ password_form.old_password }}
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                 <i class="fas fa-key text-slate-400"></i>
                             </div>
                         </div>
-                        {% if password_form.old_password.errors %}
-                            <p class="text-red-600 text-xs mt-1 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i>
-                                {{ password_form.old_password.errors.0 }}
-                            </p>
-                        {% endif %}
                     </div>
                     <div>
                         <label for="id_new_password1" class="block text-sm font-medium text-slate-700 mb-2 flex items-center">
                             <i class="fas fa-lock mr-2 text-blue-700"></i>New Password
                         </label>
-                        <div class="relative">
+                        <div class="relative w-full">
                             {{ password_form.new_password1 }}
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                 <i class="fas fa-key text-slate-400"></i>
-                            </div>
-                        </div>
-                        {% if password_form.new_password1.errors %}
-                            <p class="text-red-600 text-xs mt-1 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i>
-                                {{ password_form.new_password1.errors.0 }}
-                            </p>
-                        {% endif %}
+                            </div></div>
                     </div>
                     <div>
                         <label for="id_new_password2" class="block text-sm font-medium text-slate-700 mb-2 flex items-center">
                             <i class="fas fa-check-circle mr-2 text-blue-700"></i>Confirm New Password
                         </label>
-                        <div class="relative">
+                        <div class="relative w-full">
                             {{ password_form.new_password2 }}
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                 <i class="fas fa-key text-slate-400"></i>
                             </div>
                         </div>
-                        {% if password_form.new_password2.errors %}
-                            <p class="text-red-600 text-xs mt-1 flex items-center">
-                                <i class="fas fa-exclamation-circle mr-1"></i>
-                                {{ password_form.new_password2.errors.0 }}
-                            </p>
-                        {% endif %}
                     </div>
-                    <button type="submit" class="w-full gradient-button text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center">
+                    <button type="submit" class="w-full gradient-button text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-sm sm:text-base">
                         <i class="fas fa-save mr-2"></i>Update Password
                     </button>
                 </form>
-
-                <p class="text-xs text-slate-500 mt-4 flex items-center">
-                    <i class="fas fa-info-circle mr-2 text-blue-600"></i>
-                    Passwords must be at least 8 characters and meet site policies.
-                </p>
             </div>
         </section>
+
     </div>
 </div>
 
-<footer class="mt-12 py-6 text-center text-blue-700 text-sm">
+<footer class="mt-8 sm:mt-12 py-6 text-center text-blue-700 text-xs sm:text-sm px-4">
     <p>© 2025 YBS Route Finder. All rights reserved.</p>
 </footer>
 </body>

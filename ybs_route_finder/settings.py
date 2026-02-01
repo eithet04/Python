@@ -33,6 +33,7 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
 # Application definition
 
 INSTALLED_APPS = [
+    'widget_tweaks',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
