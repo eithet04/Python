@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>တိုင်ကြားရန် ဖုန်းနံပါတ်များ</title>
+    <title>အကြံပြုချက်ပေးပို့ရန် ဖုန်းနံပါတ်များ</title>
     {% load static %}
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -191,7 +191,7 @@
 
         <h2 class="text-3xl sm:text-4xl font-bold text-center text-main-color my-6 sm:my-8">
 YBS Bus လိုင်းများ</h2>
-        <p class="text-center text-secondary-color mb-6">တိုင်ကြားလိုသော YBS Bus လိုင်းကို ရွေးချယ်ပါ</p>
+        <p class="text-center text-secondary-color mb-6">အကြံပြုချက်ပေးပို့လိုသော YBS Bus လိုင်းကို ရွေးချယ်ပါ</p>
 
         {# -- Display Django Messages here -- #}
         {% if messages %}
@@ -207,7 +207,6 @@ YBS Bus လိုင်းများ</h2>
         <div id="bus-lines-list" class="space-y-4">
             {% for line in bus_lines %}
                 <div class="card p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center cursor-pointer hover:bg-gray-50 dark-theme:hover:bg-slate-700 transition-colors duration-200" data-line-number="YBS {{ line.line_number }}">
-                     data-line-number="YBS {{ line.line_number }}">
                     <span class="text-xl font-semibold text-main-color">YBS {{ line.line_number }}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -230,7 +229,7 @@ YBS Bus လိုင်းများ</h2>
 
             <p class="text-sm text-secondary-color mt-6 text-center">
                 <br>
-                တိုင်ကြားရန်အတွက် ဖုန်းနံပါတ်များကို နှိပ်၍ တိုက်ရိုက်ခေါ်ဆိုနိုင်ပါသည်။
+                အကြံပြုချက်ပေးပို့ရန်အတွက် ဖုန်းနံပါတ်များကို နှိပ်၍ တိုက်ရိုက်ခေါ်ဆိုနိုင်ပါသည်။
             </p>
 
             {# -- New Section for Email Complaint -- #}
@@ -258,7 +257,7 @@ YBS Bus လိုင်းများ</h2>
                         </label>
                     </div>
                     <button type="submit" class="w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
-                        Submit Complaint
+                        Submit
                     </button>
                 </form>
             </div>
