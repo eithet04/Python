@@ -3,67 +3,142 @@
 {% block header_title %}Route Segments Management{% endblock %}
 
 {% block content %}
-    <div class="p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Route Segments</h1>
-            <a href="{% url 'admin_route_segment_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200">
-                <i class="fas fa-plus mr-2"></i>Add New Segment
-            </a>
-        </div>
+<div class="mb-4 sm:mb-6 flex justify-between items-center">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Route Segments</h1>
+    <a href="{% url 'admin_route_segment_add' %}" 
+       class="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm sm:text-base flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span class="hidden sm:inline">Add New Segment</span>
+        <span class="sm:hidden">Add</span>
+    </a>
+</div>
 
-        {% if segments %}
-        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Line</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Stop</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for segment in segments %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ segment.bus_line.line_number }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ segment.bus_stop.name_en }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ segment.order }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{% url 'admin_route_segment_edit' segment.id %}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
-                            <a href="{% url 'admin_route_segment_delete' segment.id %}" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure you want to delete this route segment?')">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+{% if segments %}
+<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <!-- Mobile scroll container -->
+    <div class="overflow-x-auto -webkit-overflow-scrolling-touch">
+        <table class="min-w-full divide-y divide-gray-200" style="min-width: 500px;">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Bus Line
+                    </th>
+                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Bus Stop
+                    </th>
+                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Order
+                    </th>
+                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for segment in segments %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ segment.bus_line.line_number }}
+                    </td>
+                    <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ segment.bus_stop.name_en }}
+                    </td>
+                    <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ segment.order }}
+                    </td>
+                    <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2 sm:space-x-3">
+                            <a href="{% url 'admin_route_segment_edit' segment.id %}" 
+                               class="text-indigo-600 hover:text-indigo-900" 
+                               title="Edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </a>
+                            <a href="{% url 'admin_route_segment_delete' segment.id %}" 
+                               class="text-red-600 hover:text-red-900" 
+                               onclick="return confirm('Are you sure you want to delete this route segment?')"
+                               title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-        {% if segments.has_other_pages %}
-        <div class="flex justify-center items-center mt-6">
-            <nav class="flex items-center space-x-2">
+    <!-- Pagination -->
+    {% if segments.has_other_pages %}
+    <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6">
+        <div class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+            <span class="text-sm text-gray-700">
+                Page {{ segments.number }} of {{ segments.paginator.num_pages }}
+            </span>
+            <nav class="flex items-center space-x-2 flex-wrap justify-center">
                 {% if segments.has_previous %}
-                    <a href="?page=1" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200">First</a>
-                    <a href="?page={{ segments.previous_page_number }}" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200">Previous</a>
+                    <a href="?page=1" 
+                       class="px-3 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200 text-sm">
+                        First
+                    </a>
+                    <a href="?page={{ segments.previous_page_number }}" 
+                       class="px-3 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200 text-sm">
+                        Previous
+                    </a>
                 {% endif %}
 
                 {% for i in segments.paginator.page_range %}
                     {% if segments.number == i %}
-                        <span class="px-4 py-2 border rounded-lg bg-blue-600 text-white font-bold">{{ i }}</span>
+                        <span class="px-3 py-2 border rounded-lg bg-blue-600 text-white font-bold text-sm">
+                            {{ i }}
+                        </span>
                     {% else %}
-                        <a href="?page={{ i }}" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200">{{ i }}</a>
+                        <a href="?page={{ i }}" 
+                           class="px-3 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200 text-sm">
+                            {{ i }}
+                        </a>
                     {% endif %}
                 {% endfor %}
 
                 {% if segments.has_next %}
-                    <a href="?page={{ segments.next_page_number }}" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200">Next</a>
-                    <a href="?page={{ segments.paginator.num_pages }}" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200">Last</a>
+                    <a href="?page={{ segments.next_page_number }}" 
+                       class="px-3 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200 text-sm">
+                        Next
+                    </a>
+                    <a href="?page={{ segments.paginator.num_pages }}" 
+                       class="px-3 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200 text-sm">
+                        Last
+                    </a>
                 {% endif %}
             </nav>
         </div>
-        {% endif %}
-
-        {% else %}
-            <p class="text-gray-500">No route segments found. Add one to get started.</p>
-        {% endif %}
     </div>
+    {% endif %}
+</div>
+
+<!-- Scroll hint for mobile -->
+<div class="mt-4 text-center text-sm text-gray-500 sm:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+    </svg>
+    Swipe left/right to see more
+</div>
+
+{% else %}
+<div class="bg-white rounded-lg shadow-sm p-8 text-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </svg>
+    <p class="text-gray-500 text-lg mb-4">No route segments found.</p>
+    <a href="{% url 'admin_route_segment_add' %}" 
+       class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200">
+        Add Your First Segment
+    </a>
+</div>
+{% endif %}
 {% endblock %}

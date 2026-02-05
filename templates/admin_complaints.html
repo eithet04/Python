@@ -3,38 +3,123 @@
 {% block header_title %}Complaints{% endblock %}
 
 {% block content %}
-<div class="card bg-white overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="font-bold text-gray-800">User Complaints</h2>
-    </div>
-    <div class="p-6">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Line</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Complaint</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Submitted</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for complaint in complaints %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ complaint.email }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ complaint.bus_line }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-pre-wrap max-w-lg">{{ complaint.message }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ complaint.created_at|date:"M d, Y" }}</td>
+<div class="mb-4 sm:mb-6">
+    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">User Complaints</h2>
+</div>
 
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No new complaints.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="card bg-white overflow-hidden">
+    <!-- Mobile scroll container -->
+    <div class="overflow-x-auto -webkit-overflow-scrolling-touch">
+        <table class="min-w-full divide-y divide-gray-200" style="min-width: 700px;">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Line</th>
+                    <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Complaint</th>
+                    <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Submitted</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for complaint in complaints %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 sm:px-6 py-4 text-sm font-medium text-gray-900">
+                        <div class="max-w-xs truncate">{{ complaint.email }}</div>
+                    </td>
+                    <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {{ complaint.bus_line }}
+                        </span>
+                    </td>
+                    <td class="px-3 sm:px-6 py-4 text-sm text-gray-500">
+                        <div class="max-w-md">
+                            <div class="line-clamp-2 whitespace-pre-wrap">{{ complaint.message }}</div>
+                            {% if complaint.message|length > 100 %}
+                            <button onclick="toggleComplaint(this)" class="text-blue-600 hover:text-blue-800 text-xs mt-1">
+                                Show more
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex flex-col">
+                            <span>{{ complaint.created_at|date:"M d, Y" }}</span>
+                            <span class="text-xs text-gray-400">{{ complaint.created_at|date:"h:i A" }}</span>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                        <div class="flex flex-col items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p class="text-lg">No complaints found.</p>
+                            <p class="text-sm text-gray-400 mt-1">All complaints will appear here</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination (if you add it later) -->
+    {% if complaints.has_other_pages %}
+    <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6">
+        <div class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+            <span class="text-xs sm:text-sm text-gray-700">
+                Page {{ complaints.number }} of {{ complaints.paginator.num_pages }}
+            </span>
+            <nav class="flex items-center space-x-2">
+                {% if complaints.has_previous %}
+                    <a href="?page={{ complaints.previous_page_number }}" 
+                       class="px-3 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200 text-xs sm:text-sm">
+                        Previous
+                    </a>
+                {% endif %}
+                
+                {% if complaints.has_next %}
+                    <a href="?page={{ complaints.next_page_number }}" 
+                       class="px-3 py-2 border rounded-lg text-gray-700 hover:bg-gray-200 transition-all duration-200 text-xs sm:text-sm">
+                        Next
+                    </a>
+                {% endif %}
+            </nav>
         </div>
     </div>
+    {% endif %}
 </div>
+
+<!-- Scroll hint for mobile -->
+<div class="mt-4 text-center text-sm text-gray-500 sm:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+    </svg>
+    Swipe left/right to see more
+</div>
+
+<style>
+    /* Line clamp utility for truncating text */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
+<script>
+    function toggleComplaint(button) {
+        const messageDiv = button.previousElementSibling;
+        
+        if (messageDiv.classList.contains('line-clamp-2')) {
+            messageDiv.classList.remove('line-clamp-2');
+            button.textContent = 'Show less';
+        } else {
+            messageDiv.classList.add('line-clamp-2');
+            button.textContent = 'Show more';
+        }
+    }
+</script>
 {% endblock %}
